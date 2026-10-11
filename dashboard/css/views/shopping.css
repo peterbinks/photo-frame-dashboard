@@ -59,7 +59,7 @@
   min-height: 64px;
 }
 .s-tile:active { transform: scale(.94); }
-.s-tile b { font-size: 19px; font-weight: 800; font-stretch: 75%; line-height: 1.05; text-transform: uppercase; letter-spacing: .01em; }
+.s-tile b { font-size: 16px; font-weight: 700; line-height: 1.15; text-transform: uppercase; letter-spacing: .01em; }
 .s-tile span { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; color: var(--mute); text-transform: uppercase; letter-spacing: .06em; }
 .s-tile.is-on { background: var(--ink); color: var(--paper); }
 .s-tile.is-on span { color: inherit; opacity: .85; }

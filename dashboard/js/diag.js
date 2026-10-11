@@ -22,7 +22,7 @@
   }
   function applyExperiments() {
     var css = '';
-    if (has('font')) css += 'body, .serif, .num, button, input { font-family: sans-serif !important; font-stretch: normal !important; }';
+    if (has('font')) css += 'body, button, input { font-family: sans-serif !important; }';
     if (has('shadow')) css += '*, *::before, *::after { box-shadow: none !important; text-shadow: none !important; }';
     if (has('img')) css += 'img { visibility: hidden !important; }';
     if (has('has')) dropRules(function (t) { return t.indexOf(':has(') > -1 || t.indexOf('[style*=') > -1; });

@@ -6,6 +6,7 @@ body {
   font-size: var(--fs-body);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  font-kerning: normal;
   -webkit-tap-highlight-color: transparent;
   -webkit-user-select: none;
   user-select: none;
@@ -15,21 +16,24 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 input { font: inherit; color: inherit; -webkit-user-select: text; user-select: text; }
 img { display: block; }
 h1, h2, h3, p { margin: 0; font-weight: inherit; }
+i, em { font-style: normal; } /* Inter ships upright only here; never synthesise an oblique */
 ul { margin: 0; padding: 0; list-style: none; }
 .i { flex: none; display: block; }
 .i--fill { fill: currentColor; stroke: none; }
 ::-webkit-scrollbar { width: 0; height: 0; }
 
 /* ---------------------------------------------------------------- type utilities */
-.num { font-stretch: 62%; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
-.serif { font-family: var(--serif); font-weight: 400; letter-spacing: -.01em; }
-.serif i, i.serif { font-style: italic; }
+/* Numbers that update (clocks, temps, counts): tabular so they don't jitter; Display tracking. */
+.num { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+/* Headings and quiet one-liners. An <i> inside is the softer half of the line (regular weight). */
+.display { font-weight: 700; letter-spacing: -.025em; }
+.display i { font-weight: 400; }
 .label {
   font-size: var(--fs-label);
-  font-weight: 700;
-  font-stretch: 80%;
-  letter-spacing: .09em;
+  font-weight: 650;
+  letter-spacing: .06em;
   text-transform: uppercase;
+  font-feature-settings: 'case' 1;
   color: var(--mute);
   line-height: 1.2;
   display: flex; align-items: center; gap: 6px;
@@ -44,35 +48,80 @@ ul { margin: 0; padding: 0; list-style: none; }
   width: 1280px; height: 800px;
   margin: -400px 0 0 -640px;
   transform-origin: 50% 50%;
-  background: var(--paper);
+  background-color: var(--paper);
+  background-image: var(--wall);
   overflow: hidden;
   display: grid;
   grid-template-columns: 76px 1fr;
 }
 
-/* ---------------------------------------------------------------- rail */
+/* ---------------------------------------------------------------- rail (floating glass) */
+/* A frosted panel inset from the edges. Cheap on the frame's Mali-400: no backdrop-filter and
+   no filter. The glass shows a pre-blurred, more saturated copy of the static wallpaper
+   (--wall-frost, aligned to the stage), under a white veil with a specular edge. It's all
+   painted once; nothing behind it ever animates. The active pill is its own compositor layer
+   that slides on transform only, so switching tabs repaints nothing but the label colours. */
 .rail {
-  display: flex; flex-direction: column;
-  padding: 8px 0 12px;
-  border-right: 2px solid var(--ink);
-  background: var(--paper);
-  z-index: 5;
+  --rail-item: 64px;
+  --rail-gap: 4px;
+  --rail-pad: 6px;
+  --rail-clock: 64px;
+  position: relative; z-index: 5;
+  margin: 10px -8px 10px 10px; /* 74 × 780; reaches 8px into the views' 24px padding */
+  padding: var(--rail-pad) 5px;
+  display: flex; flex-direction: column; gap: var(--rail-gap);
+  border-radius: 26px;
+  background-color: var(--paper);
+  background-image: var(--wall-frost);
+  background-size: 1280px 800px;
+  background-position: -10px -10px;
+  background-repeat: no-repeat;
+  box-shadow: 0 0 0 1px rgba(90, 60, 30, .07), 0 2px 4px rgba(90, 60, 30, .07), 0 12px 32px rgba(90, 60, 30, .14);
 }
+/* veil + specular: light catching the top edge and rim of the glass */
+.rail::before {
+  content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .78) 0, rgba(255, 255, 255, .5) 90px, rgba(255, 255, 255, .42) 60%, rgba(255, 255, 255, .56) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1px rgba(255, 255, 255, .6), inset 0 -1px 0 rgba(255, 255, 255, .7);
+}
+/* active pill: brighter, slightly raised glass; slides between items */
+.rail::after {
+  content: ''; position: absolute; left: 5px; right: 5px; top: var(--rail-pad);
+  height: var(--rail-item); border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(255, 255, 255, .8));
+  box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1px rgba(255, 255, 255, .8), 0 0 0 1px rgba(90, 60, 30, .05), 0 2px 3px rgba(90, 60, 30, .1), 0 6px 16px rgba(90, 60, 30, .12);
+  transform: translateY(calc(var(--rail-i, 0) * (var(--rail-item) + var(--rail-gap))));
+  transition: transform .42s var(--spring);
+  will-change: transform;
+}
+.stage:not([data-view]) .rail::after { opacity: 0; }
+.stage[data-view="calendar"] { --rail-i: 1; }
+.stage[data-view="tasks"] { --rail-i: 2; }
+.stage[data-view="shopping"] { --rail-i: 3; }
+.stage[data-view="photos"] { --rail-i: 4; }
+.stage[data-view="control"] { --rail-i: 5; }
+/* settings sits at the bottom, just above the clock */
+.stage[data-view="settings"] .rail::after { transform: translateY(calc(780px - 2 * var(--rail-pad) - var(--rail-clock) - var(--rail-gap) - var(--rail-item))); }
 .rail-item {
-  height: 72px;
+  position: relative; z-index: 1; flex: none;
+  height: var(--rail-item); border-radius: 20px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
-  font-size: 12px; font-weight: 700; font-stretch: 70%; letter-spacing: .07em; text-transform: uppercase;
-  color: var(--ink-2);
-  position: relative;
+  font-size: 12px; font-weight: 600; letter-spacing: -.005em;
+  color: rgb(var(--ink-rgb) / .62);
 }
-.rail-item.is-active { background: var(--ink); color: var(--paper); }
-.rail-item:active { background: var(--paper-2); }
-.rail-item.is-active:active { background: var(--ink-2); }
-.rail-item--settings { margin-top: auto; height: 64px; } /* gear at the bottom, above the clock */
-.rail-clock { padding: 10px 0; text-align: center; line-height: 1; position: relative; overflow: hidden; }
-.rail-clock.is-holding { background: var(--paper-2); }
-.rail-clock b { display: block; font-size: 24px; font-weight: 800; font-stretch: 62%; font-variant-numeric: tabular-nums; }
-.rail-clock span { font-size: 12px; font-weight: 700; letter-spacing: .1em; color: var(--mute); }
+.rail-item.is-active { color: var(--ink); font-weight: 700; }
+.rail-item:active { background: rgba(255, 255, 255, .45); }
+.rail-item--settings { margin-top: auto; } /* gear at the bottom, above the clock */
+.rail-clock {
+  position: relative; z-index: 1; flex: none;
+  height: var(--rail-clock);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  line-height: 1; text-align: center;
+}
+.rail-clock::before { content: ''; position: absolute; left: 14px; right: 14px; top: 0; height: 1px; background: rgb(var(--ink-rgb) / .1); }
+.rail-clock b { font-size: 19px; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.rail-clock span { font-size: 11px; font-weight: 650; letter-spacing: .06em; color: var(--mute); }
 
 /* ---------------------------------------------------------------- views */
 .views { position: relative; overflow: hidden; }
@@ -91,8 +140,7 @@ button.card:active, .h-hero:active, .h-photo:active { transform: scale(.985); }
   display: inline-grid; place-items: center;
   border-radius: 50%;
   background: var(--c); color: var(--c-ink);
-  font-weight: 900; font-stretch: 70%; line-height: 1;
-  padding-top: .22em;
+  font-weight: 750; line-height: 1;
 }
 .avatar--away { background: transparent; color: var(--c); box-shadow: inset 0 0 0 3px var(--c); }
 .dots { display: inline-flex; gap: 4px; align-items: center; }
@@ -102,7 +150,7 @@ button.card:active, .h-hero:active, .h-photo:active { transform: scale(.985); }
   min-height: var(--tap); padding: 0 28px;
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   border-radius: 999px; border: 2px solid var(--ink);
-  font-size: 18px; font-weight: 800; font-stretch: 75%; letter-spacing: .06em; text-transform: uppercase;
+  font-size: 16px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
 }
 .btn:active { transform: scale(.96); }
 .btn--solid { background: var(--ink); color: var(--paper); }
@@ -125,7 +173,7 @@ button.card:active, .h-hero:active, .h-photo:active { transform: scale(.985); }
 .seg { display: inline-flex; background: var(--paper-2); border-radius: 999px; padding: 4px; gap: 2px; }
 .seg button {
   min-height: 56px; padding: 0 22px; border-radius: 999px;
-  font-size: 17px; font-weight: 800; font-stretch: 75%; letter-spacing: .05em; text-transform: uppercase;
+  font-size: 15px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
   color: var(--ink-2); white-space: nowrap; text-align: center;
 }
 .seg button.is-on { background: var(--ink); color: var(--paper); }
@@ -152,7 +200,7 @@ button.card:active, .h-hero:active, .h-photo:active { transform: scale(.985); }
   display: inline-flex; align-items: center; gap: 8px;
   height: 44px; padding: 0 18px; border-radius: 999px;
   background: rgba(0, 0, 0, .22); color: inherit;
-  font-size: 17px; font-weight: 800; font-stretch: 80%; letter-spacing: .06em; text-transform: uppercase;
+  font-size: 16px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
 }
 .pill--soon { background: var(--ink); color: #fff; }
 .pill--alert { background: #fff; color: var(--alert); }
@@ -179,7 +227,7 @@ button.card:active, .h-hero:active, .h-photo:active { transform: scale(.985); }
   min-height: 56px; padding: 0 22px; margin-left: 6px;
   display: inline-flex; align-items: center; gap: 8px;
   border-radius: 14px; background: rgba(255, 255, 255, .14);
-  font-size: 17px; font-weight: 800; font-stretch: 75%; letter-spacing: .08em; text-transform: uppercase;
+  font-size: 16px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
 }
 .toast-undo:active { background: rgba(255, 255, 255, .28); }
 .toast:not(:has(.toast-undo)) { padding-right: 28px; }
@@ -204,7 +252,7 @@ button.card:active, .h-hero:active, .h-photo:active { transform: scale(.985); }
   display: grid; place-items: center; background: rgba(0, 0, 0, .08);
 }
 .sheet-pad { padding: 34px 36px 32px; }
-.sheet-h { font-size: 52px; line-height: 1; margin: 6px 0 22px; }
+.sheet-h { font-size: 40px; line-height: 1.05; margin: 6px 0 22px; }
 .sheet-p { font-size: 20px; color: var(--ink-2); margin: -8px 0 24px; }
 .sheet-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 26px; }
 
@@ -221,11 +269,11 @@ button.card:active, .h-hero:active, .h-photo:active { transform: scale(.985); }
 .banner.is-in { transform: none; opacity: 1; }
 .banner--ink { background: var(--ink); color: #fff; }
 .banner-text { flex: 1; display: flex; flex-direction: column; }
-.banner-text b { font-size: 24px; font-weight: 800; font-stretch: 80%; }
+.banner-text b { font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
 .banner-text span { font-size: 17px; opacity: .8; }
 .banner-btn {
   min-height: var(--tap); padding: 0 24px; border-radius: 14px;
-  font-size: 17px; font-weight: 800; font-stretch: 75%; letter-spacing: .07em; text-transform: uppercase;
+  font-size: 16px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
   background: rgba(0, 0, 0, .1);
 }
 .banner--ink .banner-btn { background: rgba(255, 255, 255, .12); }
@@ -248,14 +296,14 @@ button.card:active, .h-hero:active, .h-photo:active { transform: scale(.985); }
 }
 .tk-live i { width: 10px; height: 10px; border-radius: 50%; background: var(--alert); }
 .tk-door { position: absolute; left: 40px; bottom: 40px; right: 40px; }
-.tk-title { font-size: 104px; line-height: .92; margin: 14px 0 34px; }
+.tk-title { font-size: 80px; line-height: .95; margin: 14px 0 34px; }
 .tk-actions { display: flex; gap: 14px; }
 .tk-btn {
   position: relative; overflow: hidden;
   min-height: 96px; min-width: 200px; padding: 0 30px;
   display: inline-flex; align-items: center; gap: 14px;
   border-radius: 24px; background: rgba(255, 255, 255, .16); color: #fff;
-  font-size: 24px; font-weight: 800; font-stretch: 80%;
+  font-size: 22px; font-weight: 700;
 }
 .tk-btn span { position: relative; z-index: 1; }
 .tk-btn .i { position: relative; z-index: 1; }
@@ -266,24 +314,24 @@ button.card:active, .h-hero:active, .h-photo:active { transform: scale(.985); }
 .takeover--alarm { background: var(--alert); color: #fff; }
 .tk-alarm { position: absolute; left: 60px; right: 60px; top: 60px; bottom: 60px; display: flex; flex-direction: column; justify-content: flex-end; }
 .tk-alarm-icon { position: absolute; right: 0; top: 0; width: 200px; height: 200px; border-radius: 50%; background: rgba(255, 255, 255, .15); display: grid; place-items: center; }
-.tk-huge { font-size: 210px; font-weight: 900; font-stretch: 62%; text-transform: uppercase; line-height: .82; letter-spacing: -.02em; word-spacing: .12em; margin: 14px 0 18px; }
+.tk-huge { font-size: 150px; font-weight: 900; text-transform: uppercase; line-height: .86; letter-spacing: -.035em; word-spacing: .12em; margin: 14px 0 18px; }
 .tk-sub { font-size: 30px; margin-bottom: 36px; max-width: 800px; }
 .tk-btn--light { background: rgba(255, 255, 255, .18); }
 .tk-btn--light.tk-btn--solid { background: #fff; color: var(--alert); }
 
 
 /* ---------------------------------------------------------------- not authorized + loading */
-.gate { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 95; display: grid; place-items: center; background: var(--paper); }
+.gate { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 95; display: grid; place-items: center; background-color: var(--paper); background-image: var(--wall); }
 .gate-card { max-width: 760px; padding: 48px; text-align: center; }
 .gate-card .label { justify-content: center; }
-.gate-card h1 { font-size: 88px; line-height: 1; margin: 10px 0 22px; }
+.gate-card h1 { font-size: 64px; line-height: 1.05; margin: 10px 0 22px; }
 .gate-card p { font-size: 24px; line-height: 1.45; color: var(--ink-2); }
 .stage[data-booting]::after {
   content: attr(data-booting);
   position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 94;
   display: flex; align-items: center; justify-content: center;
-  background: var(--paper); color: var(--mute);
-  font-family: var(--serif); font-style: italic; font-size: 48px;
+  background-color: var(--paper); background-image: var(--wall); color: var(--mute);
+  font-size: 40px; font-weight: 600; letter-spacing: -.02em;
 }
 
 /* ---------------------------------------------------------------- night dashboard (tap on night clock) */

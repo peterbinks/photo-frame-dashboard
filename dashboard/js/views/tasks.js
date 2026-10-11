@@ -44,8 +44,8 @@
       (kid ? '<span class="ch-stars">' + App.icon('star', 18, 'i--fill') + '<span class="num">' + D.stars[who] + '</span></span>' : '<span class="ch-sub">' + (who === 'any' ? 'Up for grabs' : (list.length ? done + ' of ' + list.length : 'Nothing')) + '</span>') + '</div>' +
       '<div class="ch-ring">' + App.ring(done, list.length || 1, 46) + '<span class="num">' + (all ? '✓' : list.length ? done + '/' + list.length : '–') + '</span></div>' +
       '</header>' +
-      '<div class="ch-list">' + (list.length ? list.map(function (c) { return row(c, p); }).join('') : '<div class="ch-none serif"><i>Nothing this ' + (r.id === 'evening' ? 'evening' : r.id === 'morning' ? 'morning' : 'afternoon') + '</i></div>') +
-      (all ? '<div class="ch-alldone serif">All done<i>!</i></div>' : '') + '</div>' +
+      '<div class="ch-list">' + (list.length ? list.map(function (c) { return row(c, p); }).join('') : '<div class="ch-none display"><i>Nothing this ' + (r.id === 'evening' ? 'evening' : r.id === 'morning' ? 'morning' : 'afternoon') + '</i></div>') +
+      (all ? '<div class="ch-alldone display">All done<i>!</i></div>' : '') + '</div>' +
       weekGrid(who) +
       '</section>';
   }
@@ -56,7 +56,7 @@
     var done = inR.filter(function (c) { return c.done; }).length;
     V.el.innerHTML = '<div class="tasks">' +
       '<header class="t-head">' +
-      '<div class="t-title"><div class="label">' + (r.id === auto.id ? 'Right now · ' : '') + r.range + '</div><h1 class="serif">' + r.name + '</h1></div>' +
+      '<div class="t-title"><div class="label">' + (r.id === auto.id ? 'Right now · ' : '') + r.range + '</div><h1 class="display">' + r.name + '</h1></div>' +
       '<div class="seg">' + D.routines.map(function (x) { return '<button class="' + (x.id === r.id ? 'is-on' : '') + '" data-r="' + x.id + '">' + x.name + '</button>'; }).join('') + '</div>' +
       '<div class="t-progress"><span class="num">' + done + '<small>/' + inR.length + '</small></span><div class="t-bar"><i style="width:' + (inR.length ? done / inR.length * 100 : 0) + '%"></i></div><span class="label">done</span></div>' +
       '<button class="fab" data-add aria-label="Add a chore">' + App.icon('plus', 26) + '</button>' +
@@ -82,7 +82,7 @@
     App.sheet(
       '<div class="sheet-pad add">' +
       '<div class="label">New chore</div>' +
-      '<input class="big-input serif" placeholder="What needs doing?" data-f="title">' +
+      '<input class="big-input display" placeholder="What needs doing?" data-f="title">' +
       '<div class="label">Icon</div>' + chips('emoji', EMOJI.map(function (e) { return [e, e]; })) +
       '<div class="label">Who</div><div class="add-who">' + D.people.map(function (p) {
         return '<button class="who-btn" data-who="' + p.id + '" style="' + App.pstyle(p) + '">' + App.avatar(p, 56) + '<span>' + App.esc(p.name) + '</span></button>';
@@ -121,7 +121,7 @@
     var c = D.chores.filter(function (x) { return x.id === id; })[0];
     if (!c) return;
     App.sheet('<div class="sheet-pad"><div class="label">' + c.emoji + ' ' + (c.who === 'any' ? 'Anyone' : App.esc(App.person(c.who).name)) + '</div>' +
-      '<h2 class="serif sheet-h">Remove “' + App.esc(c.title) + '”?</h2>' +
+      '<h2 class="display sheet-h">Remove “' + App.esc(c.title) + '”?</h2>' +
       '<div class="sheet-actions"><button class="btn btn--ghost" data-close>Keep it</button><button class="btn btn--solid" data-remove>Remove chore</button></div></div>', {
       onMount: function (s, close) {
         s.querySelector('[data-remove]').onclick = function () {
@@ -172,7 +172,7 @@
 
   // "Anyone" chores ask who did it, so stars go to the right kid
   function whoDidIt(c, btn) {
-    App.sheet('<div class="sheet-pad"><div class="label">' + c.emoji + ' ' + App.esc(c.title) + '</div><h2 class="serif sheet-h">Who did it?</h2>' +
+    App.sheet('<div class="sheet-pad"><div class="label">' + c.emoji + ' ' + App.esc(c.title) + '</div><h2 class="display sheet-h">Who did it?</h2>' +
       '<div class="add-who add-who--big">' + D.people.map(function (p) {
         return '<button class="who-btn" data-by="' + p.id + '" style="' + App.pstyle(p) + '">' + App.avatar(p, 88) + '<span>' + App.esc(p.name) + '</span></button>';
       }).join('') + '</div></div>', {

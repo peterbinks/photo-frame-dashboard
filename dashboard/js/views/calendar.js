@@ -109,7 +109,7 @@
       nowLine([day]) + '</div>' +
       '</div></div>';
     var cs = D.status.calendar;
-    var empty = !App.timedOn(day).length ? '<div class="cal-empty serif">' + (cs.state === 'ok' ? 'Nothing on the calendar.<br><i>A rare, quiet day.</i>'
+    var empty = !App.timedOn(day).length ? '<div class="cal-empty display">' + (cs.state === 'ok' ? 'Nothing on the calendar.<br><i>A rare, quiet day.</i>'
       : cs.state === 'loading' ? 'Loading the calendar…' : App.esc(cs.message || 'Calendar unavailable') + '.' + (cs.state === 'empty' ? '<br><i>Add one in Settings.</i>' : '')) + '</div>' : '';
     return '<div class="cal-day">' + ad + grid + empty + '</div>';
   }
@@ -160,7 +160,7 @@
             '<span class="wk-t">' + App.fmt.time(e.start, false) + '</span><span class="wk-n">' + App.esc(e.title) + '</span></button>';
         }).join('') +
         (more > 0 ? '<button class="wk-more" data-day="' + (+d) + '">+' + more + ' more</button>' : '') +
-        (!list.length && !ad.length ? '<div class="wk-free serif"><i>Free</i></div>' : '') +
+        (!list.length && !ad.length ? '<div class="wk-free display"><i>Free</i></div>' : '') +
         '</div>';
     }).join('') + '</div>';
   }
@@ -199,7 +199,7 @@
     var isToday = V.mode === 'month' ? (V.date.getMonth() === App.now().getMonth()) : App.sameDay(V.date, App.now());
     return '<header class="cal-head">' +
       '<button class="icon-btn" data-nav="-1" aria-label="Previous">' + App.icon('left', 24) + '</button>' +
-      '<div class="cal-title"><div class="serif">' + t.t + '</div><div class="label">' + t.k + '</div></div>' +
+      '<div class="cal-title"><div class="display">' + t.t + '</div><div class="label">' + t.k + '</div></div>' +
       '<button class="icon-btn" data-nav="1" aria-label="Next">' + App.icon('right', 24) + '</button>' +
       '<button class="btn btn--ghost' + (isToday ? ' is-hidden' : '') + '" data-today>Today</button>' +
       '<div class="seg">' + MODES.map(function (m) { return '<button class="' + (V.mode === m[0] ? 'is-on' : '') + '" data-mode="' + m[0] + '">' + m[1] + '</button>'; }).join('') + '</div>' +
@@ -260,7 +260,7 @@
     App.sheet(
       '<div class="evs" style="' + App.pstyle(p) + '">' +
       '<div class="evs-band"><div class="label label--on">' + App.fmt.rel(e.start) + ' · ' + App.fmt.month(e.start) + ' ' + e.start.getDate() + '</div>' +
-      '<h2 class="serif">' + App.esc(e.title) + '</h2>' +
+      '<h2 class="display">' + App.esc(e.title) + '</h2>' +
       '<div class="evs-time num">' + (e.allDay ? 'All day' : App.fmt.range(e.start, e.end)) + '</div></div>' +
       '<div class="evs-body">' +
       (e.travel ? '<div class="evs-row evs-leave">' + App.icon('car', 28) + '<div><b>Leave by ' + App.fmt.time(App.leaveBy(e)) + '</b><span>' + e.travel + ' min drive in current traffic</span></div></div>' : '') +
@@ -268,7 +268,7 @@
       '<div class="evs-row">' + App.icon('person', 28) + '<div class="evs-people">' + (fam ? D.people : e.people.map(App.person)).map(function (x) {
         return '<span class="chip" style="' + App.pstyle(x) + '">' + App.avatar(x, 32) + x.name + '</span>';
       }).join('') + '</div></div>' +
-      (e.notes ? '<div class="evs-notes serif">“' + App.esc(e.notes) + '”</div>' : '') +
+      (e.notes ? '<div class="evs-notes display">“' + App.esc(e.notes) + '”</div>' : '') +
       (e.local ? '<div class="sheet-actions"><button class="btn btn--ghost" data-remove-ev>Remove from dashboard</button></div>' : '') +
       '</div></div>', {
       cls: 'sheet--event',
@@ -288,7 +288,7 @@
 
   function moreSheet(ids) {
     var list = ids.map(App.findEvent).filter(Boolean);
-    App.sheet('<div class="sheet-pad"><div class="label">Overlapping</div><h2 class="serif sheet-h">' + list.length + ' more events</h2>' +
+    App.sheet('<div class="sheet-pad"><div class="label">Overlapping</div><h2 class="display sheet-h">' + list.length + ' more events</h2>' +
       '<div class="more-list">' + list.map(function (e) {
         return '<button class="more-row" data-ev="' + e.id + '" style="' + App.pstyle(App.evColor(e)) + '"><i></i><b>' + App.esc(e.title) + '</b><span>' + App.fmt.range(e.start, e.end) + '</span></button>';
       }).join('') + '</div></div>', {
@@ -305,7 +305,7 @@
     App.sheet(
       '<div class="sheet-pad add">' +
       '<div class="label">New event</div>' +
-      '<input class="big-input serif" placeholder="What’s happening?" data-f="title">' +
+      '<input class="big-input display" placeholder="What’s happening?" data-f="title">' +
       '<div class="chips">' + ideas.map(function (i) { return '<button class="chip chip--ghost" data-idea="' + i + '">' + i + '</button>'; }).join('') + '</div>' +
       '<div class="label">Who</div><div class="add-who">' + D.people.map(function (p) {
         return '<button class="who-btn" data-who="' + p.id + '" style="' + App.pstyle(p) + '">' + App.avatar(p, 56) + '<span>' + p.name + '</span></button>';

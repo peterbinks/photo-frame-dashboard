@@ -30,7 +30,7 @@
     gated = true;
     var el = document.createElement('div');
     el.className = 'gate';
-    el.innerHTML = '<div class="gate-card"><div class="label">Home HQ</div><h1 class="serif">Not authorized</h1>' +
+    el.innerHTML = '<div class="gate-card"><div class="label">Home HQ</div><h1 class="display">Not authorized</h1>' +
       '<p>Open the dashboard link that ends in <b>?k=&lt;access key&gt;</b> once on this device.<br>' +
       'Run <b>npm run setup</b> on your computer to see the link again.</p></div>';
     document.getElementById('stage').appendChild(el);

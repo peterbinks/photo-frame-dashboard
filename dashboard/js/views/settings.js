@@ -164,7 +164,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
         swatch(m.color) + App.icon('edit', 24, 'st-chev') + '</button>';
     }).join('');
     return head('Family', 'Everyone gets a lane on Today, the calendar and chores. Renaming keeps their chores and stars.') +
-      '<div class="card st-list">' + (rows || '<div class="st-empty serif"><i>No one yet</i></div>') + '</div>' +
+      '<div class="card st-list">' + (rows || '<div class="st-empty display"><i>No one yet</i></div>') + '</div>' +
       '<div class="st-actions">' + btn('data-add-member' + (fam.length >= LIMITS.members ? ' disabled' : ''), App.icon('plus', 22) + 'Add person', 'btn--solid') +
       (fam.length >= LIMITS.members ? '<span class="st-note">' + LIMITS.members + ' people fit on the screen</span>' : '') + '</div>';
   }
@@ -179,7 +179,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
         '<div class="st-main"><b>' + esc(c.name) + '</b><small>' + sub + '</small></div>' + App.icon('edit', 24, 'st-chev') + '</button>';
     }).join('');
     return head('Calendars', 'Google Calendar on a computer: ⚙ Settings → click the calendar → Integrate calendar → copy “Secret address in iCal format”.') +
-      '<div class="card st-list">' + (rows || '<div class="st-empty serif"><i>No calendars yet</i></div>') + '</div>' +
+      '<div class="card st-list">' + (rows || '<div class="st-empty display"><i>No calendars yet</i></div>') + '</div>' +
       '<div class="st-actions">' + btn('data-add-cal' + (cals.length >= LIMITS.calendars ? ' disabled' : ''), App.icon('plus', 22) + 'Add calendar', 'btn--solid') + '</div>';
   }
 
@@ -193,7 +193,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
         '<button class="icon-btn" data-del-album="' + a.id + '" aria-label="Remove ' + esc(name) + '">' + App.icon('trash', 24) + '</button></div>';
     }).join('');
     return head('Photo albums', 'In Photos on iPhone: open the shared album → People → turn on “Public Website” → Share Link.') +
-      '<div class="card st-list">' + (rows || '<div class="st-empty serif"><i>No albums yet</i></div>') + '</div>' +
+      '<div class="card st-list">' + (rows || '<div class="st-empty display"><i>No albums yet</i></div>') + '</div>' +
       '<div class="st-actions">' + btn('data-add-album' + (albums.length >= LIMITS.albums ? ' disabled' : ''), App.icon('plus', 22) + 'Add album', 'btn--solid') + '</div>';
   }
 
@@ -246,7 +246,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
   }
 
   function head(title, note) {
-    return '<header class="st-sec-head"><h2 class="serif">' + title + '</h2>' + (note ? '<p class="st-note">' + note + '</p>' : '') + '</header>';
+    return '<header class="st-sec-head"><h2 class="display">' + title + '</h2>' + (note ? '<p class="st-note">' + note + '</p>' : '') + '</header>';
   }
 
   // Colours for a member preview (palette entries are fixed, but be safe with any hex).
@@ -259,7 +259,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
   function frame() {
     V.html = null;
     V.el.innerHTML = '<div class="st">' +
-      '<nav class="st-nav"><header class="st-head"><div class="label">Home HQ</div><h1 class="serif">Settings</h1></header>' +
+      '<nav class="st-nav"><header class="st-head"><div class="label">Home HQ</div><h1 class="display">Settings</h1></header>' +
       TABS.map(function (t) { return '<button class="st-tab" data-tab="' + t[0] + '">' + App.icon(t[1], 26) + '<span>' + t[2] + '</span></button>'; }).join('') +
       '<button class="st-tab st-back" data-home>' + App.icon('left', 26) + '<span>Dashboard</span></button>' +
       '</nav><section class="st-body"></section></div>';
@@ -270,7 +270,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
     App.$$('.st-tab[data-tab]', V.el).forEach(function (b) { b.classList.toggle('is-on', b.dataset.tab === V.tab); });
     var body = V.el.querySelector('.st-body'), top = body.scrollTop, html;
     if (V.tab === 'sync') html = syncSection();
-    else if (!V.doc) html = '<div class="st-empty serif"><i>' + (V.error ? esc(V.error) : 'Loading settings…') + '</i></div>' + (V.error ? '<div class="st-actions">' + btn('data-retry', 'Try again') + '</div>' : '');
+    else if (!V.doc) html = '<div class="st-empty display"><i>' + (V.error ? esc(V.error) : 'Loading settings…') + '</i></div>' + (V.error ? '<div class="st-actions">' + btn('data-retry', 'Try again') + '</div>' : '');
     else html = SECTIONS[V.tab]();
     // Only touch the DOM when something changed, so a tap is never lost to a no-op repaint.
     if (html === V.html && body.firstChild) return;
@@ -296,7 +296,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
     if (label) b.innerHTML = on ? '<i class="st-spin"></i>' + label : label;
   }
   function confirmSheet(title, text, action, onYes) {
-    App.sheet('<div class="sheet-pad"><div class="label">Are you sure?</div><h2 class="serif sheet-h">' + title + '</h2><p class="sheet-p st-confirm">' + text + '</p>' +
+    App.sheet('<div class="sheet-pad"><div class="label">Are you sure?</div><h2 class="display sheet-h">' + title + '</h2><p class="sheet-p st-confirm">' + text + '</p>' +
       '<div class="sheet-actions"><button class="btn btn--ghost" data-close>Cancel</button><button class="btn btn--solid st-danger" data-yes>' + action + '</button></div></div>', {
       onMount: function (s, close) {
         s.querySelector('[data-yes]').addEventListener('click', function () {
@@ -314,7 +314,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
     if (id && !m) return;
     var used = V.doc.family.map(function (x) { return x.color; });
     var st = { color: m ? m.color : PALETTE.filter(function (c) { return used.indexOf(c) < 0; })[0] || PALETTE[0], kid: m ? m.kid : false };
-    formSheet('<div class="label">Family</div><h2 class="serif sheet-h">' + (m ? esc(m.name) : 'Add a person') + '</h2>' +
+    formSheet('<div class="label">Family</div><h2 class="display sheet-h">' + (m ? esc(m.name) : 'Add a person') + '</h2>' +
       '<input class="st-input" data-f="name" maxlength="' + LIMITS.memberName + '" placeholder="Name" autocomplete="off" enterkeyhint="done" value="' + (m ? esc(m.name) : '') + '">' +
       '<div class="label">Colour</div>' + palette(st.color) +
       '<div class="label">Stars for chores</div>' + seg('kid', [['0', 'Grown-up'], ['1', 'Kid · earns stars']], st.kid ? '1' : '0') +
@@ -374,7 +374,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
     var c = id ? find(V.doc.calendars, id) : null;
     if (id && !c) return;
     var st = { url: c ? c.url : '', checked: !!c, name: c ? c.name : '', people: c ? c.people.slice() : [], color: c ? c.color : null };
-    formSheet('<div class="label">Calendar</div><h2 class="serif sheet-h">' + (c ? esc(c.name) : 'Add a calendar') + '</h2>' +
+    formSheet('<div class="label">Calendar</div><h2 class="display sheet-h">' + (c ? esc(c.name) : 'Add a calendar') + '</h2>' +
       (c ? '<p class="st-link">' + App.icon('link', 20) + esc(shortUrl(c.url)) + '</p>'
         : '<p class="sheet-p">Paste the calendar’s <b>secret address in iCal format</b> (ends in .ics).</p>' +
           '<div class="st-input-row"><input class="st-input st-input--link" data-f="url" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics"' + LINK_ATTRS + '>' +
@@ -459,7 +459,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
   // Albums ---------------------------------------------------------------------------
   function albumSheet() {
     var st = { url: '', name: '', checked: false };
-    formSheet('<div class="label">Photo album</div><h2 class="serif sheet-h">Add an album</h2>' +
+    formSheet('<div class="label">Photo album</div><h2 class="display sheet-h">Add an album</h2>' +
       '<p class="sheet-p">Paste the shared album’s public link: <b>photos.icloud.com/shared/album/…</b> or <b>icloud.com/sharedalbum/#…</b></p>' +
       '<div class="st-input-row"><input class="st-input st-input--link" data-f="url" placeholder="https://photos.icloud.com/shared/album/…"' + LINK_ATTRS + '>' +
       '<button class="btn btn--solid" data-check>Check</button></div>' +
@@ -519,7 +519,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
 
   // Display --------------------------------------------------------------------------
   function citySheet() {
-    formSheet('<div class="label">Weather</div><h2 class="serif sheet-h">Weather location</h2>' +
+    formSheet('<div class="label">Weather</div><h2 class="display sheet-h">Weather location</h2>' +
       '<div class="st-input-row"><input class="st-input" data-f="city" placeholder="City or US ZIP code" autocomplete="off" enterkeyhint="search">' +
       '<button class="btn btn--solid" data-search>Search</button></div>' +
       '<p class="st-err" style="display:none"></p><div class="st-places"></div>',
@@ -573,7 +573,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
 
   // Home Assistant ---------------------------------------------------------------------
   function haUrlSheet() {
-    formSheet('<div class="label">Home Assistant</div><h2 class="serif sheet-h">Address</h2>' +
+    formSheet('<div class="label">Home Assistant</div><h2 class="display sheet-h">Address</h2>' +
       '<p class="sheet-p">As this screen reaches it on your Wi-Fi, e.g. <b>http://192.168.1.20:8123</b></p>' +
       '<input class="st-input st-input--link" data-f="url" placeholder="http://homeassistant.local:8123"' + LINK_ATTRS + ' value="' + esc(V.doc.haUrl || '') + '">' +
       '<p class="st-err" style="display:none"></p>' +

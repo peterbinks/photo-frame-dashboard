@@ -113,10 +113,10 @@
     return on ? on + ' on' : 'All off';
   }
   function rooms() {
-    if (!D.rooms.length) return '<div class="hc-none serif"><i>No lights, switches, covers or locks found in Home Assistant.</i></div>';
+    if (!D.rooms.length) return '<div class="hc-none display"><i>No lights, switches, covers or locks found in Home Assistant.</i></div>';
     return D.rooms.map(function (r) {
       var list = D.devices.filter(function (d) { return d.room === r.id; });
-      return '<section class="room"><div class="room-h"><h3 class="serif">' + App.esc(r.name) + '</h3><span class="label" data-room-count="' + r.id + '">' + roomCount(r.id) + '</span></div>' +
+      return '<section class="room"><div class="room-h"><h3 class="display">' + App.esc(r.name) + '</h3><span class="label" data-room-count="' + r.id + '">' + roomCount(r.id) + '</span></div>' +
         '<div class="tiles">' + list.map(tile).join('') + '</div></section>';
     }).join('');
   }
@@ -124,7 +124,7 @@
   var MODE_LABELS = { heat: 'Heat', cool: 'Cool', heat_cool: 'Auto', auto: 'Auto', off: 'Off', fan_only: 'Fan', dry: 'Dry' };
   function climate() {
     var c = D.climate;
-    if (!c) return '<div class="label label--light">Climate</div><div class="hc-none hc-none--dark serif"><i>No thermostat in Home Assistant</i></div>';
+    if (!c) return '<div class="label label--light">Climate</div><div class="hc-none hc-none--dark display"><i>No thermostat in Home Assistant</i></div>';
     var v = verb(c);
     var modes = ['heat', 'cool', 'heat_cool', 'auto', 'off'].filter(function (m) { return c.modes.indexOf(m) > -1; }).slice(0, 4);
     return '<div class="label label--light">Climate · ' + App.esc(c.name) + '</div>' +
@@ -202,7 +202,7 @@
     var connecting = st.state === 'connecting';
     return '<div class="hc-connect"><div class="hc-connect-card">' +
       '<div class="label">Home Assistant · ' + App.esc(url) + '</div>' +
-      '<h1 class="serif">' + (connecting ? 'Connecting…' : 'Connect Home Assistant') + '</h1>' +
+      '<h1 class="display">' + (connecting ? 'Connecting…' : 'Connect Home Assistant') + '</h1>' +
       (st.message ? '<pre class="hc-connect-msg">' + App.esc(st.message) + '</pre>' : '<p>Sign in once to control lights, locks, climate, cameras and scenes from here.</p>') +
       (connecting ? '' : '<div class="sheet-actions">' + (st.state === 'error' ? '<button class="btn btn--ghost" data-ha-retry>Try again</button>' : '') +
         '<button class="btn btn--solid" data-ha-login>Connect Home Assistant</button></div>') +
@@ -282,7 +282,7 @@
     var g = dev(id);
     if (!g) return;
     var opening = g.state === 'closed' || g.state === 'closing';
-    App.sheet('<div class="sheet-pad"><div class="label">' + App.esc(g.name) + ' · currently ' + g.state + '</div><h2 class="serif sheet-h">' + (opening ? 'Open' : 'Close') + ' the ' + App.esc(g.name.toLowerCase()) + '?</h2>' +
+    App.sheet('<div class="sheet-pad"><div class="label">' + App.esc(g.name) + ' · currently ' + g.state + '</div><h2 class="display sheet-h">' + (opening ? 'Open' : 'Close') + ' the ' + App.esc(g.name.toLowerCase()) + '?</h2>' +
       '<p class="sheet-p">' + (opening ? 'Make sure the driveway is clear.' : 'The door will stop and reverse if anything is in the way.') + '</p>' +
       '<div class="slide-confirm"><span class="sc-label">Slide to ' + (opening ? 'open' : 'close') + ' →</span><span class="sc-fill"></span><span class="sc-knob">' + App.icon('garage', 30) + '</span></div></div>', {
       onMount: function (s, close) {
@@ -322,8 +322,8 @@
     var list = D.devices.filter(function (d) { return kind === 'lights' ? d.type === 'light' : (d.type === 'lock' || d.type === 'garage'); });
     if (kind === 'lights') list.sort(function (a, b) { return b.on - a.on; });
     App.sheet('<div class="sheet-pad"><div class="label">' + (kind === 'lights' ? 'Every light in the house' : 'Doors + garage') + '</div>' +
-      '<h2 class="serif sheet-h">' + (kind === 'lights' ? 'Lights' : 'Security') + '</h2>' +
-      '<div class="tiles tiles--sheet">' + (list.length ? list.map(tile).join('') : '<div class="hc-none serif"><i>None in Home Assistant</i></div>') + '</div>' +
+      '<h2 class="display sheet-h">' + (kind === 'lights' ? 'Lights' : 'Security') + '</h2>' +
+      '<div class="tiles tiles--sheet">' + (list.length ? list.map(tile).join('') : '<div class="hc-none display"><i>None in Home Assistant</i></div>') + '</div>' +
       '<div class="sheet-actions">' + (kind === 'lights' ? '<button class="btn btn--solid" data-alloff>Turn everything off</button>' : '<button class="btn btn--solid" data-lockall>Lock all doors</button>') + '</div></div>', {
       cls: 'sheet--wide',
       onClose: function () { V.sheetBox = null; },

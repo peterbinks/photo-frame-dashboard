@@ -6,7 +6,7 @@
 .st-tab {
   min-height: 60px; padding: 0 18px; border-radius: 16px;
   display: flex; align-items: center; gap: 14px;
-  font-size: 20px; font-weight: 800; font-stretch: 80%; color: var(--ink-2);
+  font-size: 18px; font-weight: 650; letter-spacing: -.01em; color: var(--ink-2);
 }
 .st-tab:active { background: var(--paper-2); }
 .st-tab.is-on { background: var(--ink); color: var(--paper); }
@@ -28,7 +28,7 @@
 .st-row + .st-row { border-top: 2px solid var(--paper); }
 .st-row--tap:active { background: var(--paper-2); }
 .st-main { flex: 1; min-width: 0; }
-.st-main b { display: block; font-size: 23px; font-weight: 800; font-stretch: 80%; line-height: 1.2; overflow-wrap: anywhere; }
+.st-main b { display: block; font-size: 20px; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; overflow-wrap: anywhere; }
 .st-main small { display: block; font-size: 17px; color: var(--ink-2); margin-top: 3px; overflow-wrap: anywhere; }
 .st-pre { white-space: pre-wrap; }
 .st-bad { color: var(--alert); font-weight: 700; }
@@ -94,7 +94,7 @@
 .st-color.is-on { box-shadow: 0 0 0 4px var(--paper), 0 0 0 7px var(--ink); }
 .st-color--none {
   width: auto; padding: 0 20px; border-radius: 999px; background: var(--paper-2);
-  font-size: 16px; font-weight: 800; font-stretch: 75%; letter-spacing: .05em; text-transform: uppercase;
+  font-size: 14px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
 }
 .st-color--none.is-on { background: var(--ink); color: var(--paper); box-shadow: none; }
 

@@ -5,11 +5,11 @@
 .amb-scrim { position: absolute; left: 0; right: 0; bottom: 0; height: 60%; background: linear-gradient(0deg, rgba(0, 0, 0, .75), rgba(0, 0, 0, 0)); pointer-events: none; }
 .amb-info { position: absolute; left: 60px; right: 60px; bottom: 48px; display: flex; justify-content: space-between; align-items: flex-end; }
 .amb-time { font-size: 230px; line-height: .78; letter-spacing: -.04em; }
-.amb-date { font-family: var(--serif); font-size: 38px; margin-top: 16px; }
+.amb-date { font-size: 34px; font-weight: 500; letter-spacing: -.015em; margin-top: 16px; }
 .amb-right { display: flex; flex-direction: column; align-items: flex-end; gap: 14px; }
 .amb-wx { display: flex; align-items: center; gap: 12px; }
 .amb-wx .num { font-size: 72px; line-height: .8; }
-.amb-wx small { font-family: var(--serif); font-size: 26px; font-style: italic; max-width: 220px; line-height: 1.05; }
+.amb-wx small { font-size: 22px; font-weight: 500; letter-spacing: -.01em; max-width: 220px; line-height: 1.15; }
 .amb-next {
   display: inline-flex; align-items: center; gap: 10px; height: 52px; padding: 0 20px; border-radius: 999px;
   background: rgba(255, 255, 255, .16);

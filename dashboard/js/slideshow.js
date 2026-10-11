@@ -30,7 +30,7 @@
     var m = App.photoMeta(ps[0]);
     return '<div class="cap cap--' + (size || 'l') + '">' +
       '<div class="cap-kicker">' + (m.onThisDay ? '<b>On this day</b> · ' : '') + m.kicker + ' · ' + App.esc(m.place) + '</div>' +
-      '<div class="cap-date serif">' + (ps.length > 1 ? m.monthYear : m.date) + '</div>' +
+      '<div class="cap-date display">' + (ps.length > 1 ? m.monthYear : m.date) + '</div>' +
       '</div>';
   }
   function kb(p, still) {
@@ -57,7 +57,7 @@
       var p = ps[0], m = App.photoMeta(p), rot = (Math.random() * 5 - 2.5).toFixed(1);
       return '<div class="slide slide--polaroid"><img class="blurfill" src="' + src(p) + '" alt="">' +
         '<figure class="polaroid polaroid--' + p.o + '" style="transform:rotate(' + rot + 'deg)"><div class="polaroid-img"><img src="' + src(p, true) + '" alt=""></div>' +
-        '<figcaption class="serif"><i>' + App.esc(m.place) + ', ' + m.monthYear + '</i></figcaption></figure></div>';
+        '<figcaption class="display"><i>' + App.esc(m.place) + ', ' + m.monthYear + '</i></figcaption></figure></div>';
     }
   };
 
@@ -148,7 +148,7 @@
       this.current = null;
       if (this.o.emptyText) {
         var st = D.status.photos;
-        this.el.innerHTML = '<div class="ph-empty"><div><b class="serif">' + (st.state === 'loading' ? 'Loading photos…' : App.esc(st.message || 'No photos yet')) + '</b>' +
+        this.el.innerHTML = '<div class="ph-empty"><div><b class="display">' + (st.state === 'loading' ? 'Loading photos…' : App.esc(st.message || 'No photos yet')) + '</b>' +
           (st.state === 'empty' && !D.config.albums ? '<span>Add an iCloud shared album in <i>Settings</i></span>' : '') + '</div></div>';
       }
       this.restart();

@@ -15,7 +15,7 @@
 .ch-lane { display: flex; flex-direction: column; min-height: 0; background: var(--card); border-radius: var(--r); overflow: hidden; position: relative; }
 .ch-head { display: flex; align-items: center; gap: 8px; padding: 14px 10px 14px 12px; background: var(--c); color: var(--c-ink); }
 .ch-head > div:nth-child(2) { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.1; }
-.ch-head b { font-size: 19px; font-weight: 800; font-stretch: 62%; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ch-head b { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ch-head .avatar { background: var(--c-ink); color: var(--c); }
 .ch-stars { display: inline-flex; align-items: center; gap: 4px; font-size: 22px; }
 .ch-stars .num { font-size: 24px; }

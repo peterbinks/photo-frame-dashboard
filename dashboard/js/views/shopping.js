@@ -37,7 +37,7 @@
     var d = done();
     return (items.length ? groups.map(function (gr) {
       return '<div class="s-cat" data-cat="' + gr.cat + '"><div class="s-cat-h"><span class="label">' + gr.cat + '</span><span class="label" data-cat-count>' + gr.items.length + '</span></div>' + gr.items.map(row).join('') + '</div>';
-    }).join('') : '<div class="s-empty serif">All stocked up.<br><i>Nothing left to buy.</i></div>') +
+    }).join('') : '<div class="s-empty display">All stocked up.<br><i>Nothing left to buy.</i></div>') +
       (d.length ? '<div class="s-drawer' + (V.drawer ? ' is-open' : '') + '">' +
         '<button class="s-drawer-h" data-drawer><span>' + App.icon('check', 22) + ' Got it <b class="num">(' + d.length + ')</b></span><span class="label">' + (V.drawer ? 'Hide' : 'Show') + '</span></button>' +
         (V.drawer ? '<div class="s-drawer-list">' + d.map(function (g) {
@@ -123,7 +123,7 @@
   }
   function render() {
     V.el.innerHTML = '<div class="shop">' +
-      '<header class="s-head"><div><div class="label">Shared list</div><h1 class="serif">Groceries</h1></div><div class="s-count"></div><div class="seg s-stores"></div></header>' +
+      '<header class="s-head"><div><div class="label">Shared list</div><h1 class="display">Groceries</h1></div><div class="s-count"></div><div class="seg s-stores"></div></header>' +
       '<div class="s-list"></div>' +
       '<aside class="s-side">' +
       '  <div class="s-add">' +
