@@ -2,21 +2,28 @@ package com.wesbos.homehq;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebViewClient;
 
 /**
  * Full-screen kiosk WebView for the Home HQ wall tablet.
  * - Immersive mode hides the status + navigation bars (true 1280x800).
- * - Exit: hold two fingers still on the screen for 1.5s to go to the regular launcher.
+ * - Exit: hold two fingers still on the screen for 1.5s to open the regular launcher.
+ * - It is a HOME app: set it as the default Home so it starts on boot and Home returns here.
+ * - The last URL passed in a VIEW intent is remembered and loaded on every later start.
  * - Remote debugging is OFF unless launched with the debug extra (every app on this device
  *   gets root, so the devtools socket should only exist while actively debugging):
  *     adb shell am start -n com.wesbos.homehq/.MainActivity --ez debug true
@@ -26,9 +33,11 @@ public class MainActivity extends Activity {
   static final String TAG = "HomeHQ";
   static final String DEFAULT_URL = "https://home-dashboard.wesbos.workers.dev/";
   static final long EXIT_HOLD_MS = 1500;
+  static final long RETRY_MS = 10000;
   static final float EXIT_SLOP_PX = 60;
 
   private WebView web;
+  private String currentUrl;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private final int[] exitIds = new int[2];
   private final float[] exitX = new float[2];
@@ -40,11 +49,26 @@ public class MainActivity extends Activity {
     public void run() {
       exitArmed = false;
       Log.i(TAG, "Two-finger hold: exiting to launcher");
+      // This activity is itself the HOME app, so a plain HOME intent would land back here.
       Intent home = new Intent(Intent.ACTION_MAIN);
       home.addCategory(Intent.CATEGORY_HOME);
+      for (ResolveInfo ri : getPackageManager().queryIntentActivities(home, 0)) {
+        String pkg = ri.activityInfo.packageName;
+        if (pkg.equals(getPackageName()) || pkg.equals("com.android.settings")) continue;
+        home.setClassName(pkg, ri.activityInfo.name);
+        break;
+      }
+      if (home.getComponent() == null) home = new Intent(Settings.ACTION_SETTINGS);
       home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
       startActivity(home);
-      finish();
+    }
+  };
+
+  private final Runnable retryLoad = new Runnable() {
+    @Override
+    public void run() {
+      Log.i(TAG, "Retrying " + currentUrl);
+      web.loadUrl(currentUrl);
     }
   };
 
@@ -61,11 +85,34 @@ public class MainActivity extends Activity {
     s.setDomStorageEnabled(true);
     s.setUseWideViewPort(true);
     s.setMediaPlaybackRequiresUserGesture(false);
-    web.setWebViewClient(new WebViewClient()); // keep navigation inside the kiosk
+    // The dashboard is https but talks to Home Assistant on the LAN over http/ws.
+    s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+    web.setWebViewClient(new WebViewClient() { // keep navigation inside the kiosk
+      @Override
+      public void onReceivedError(WebView view, WebResourceRequest req, WebResourceError err) {
+        if (!req.isForMainFrame()) return;
+        // Typically Wi-Fi not up yet after boot: retry instead of showing an error page forever.
+        Log.w(TAG, "Load failed (" + err.getErrorCode() + " " + err.getDescription() + ")");
+        handler.removeCallbacks(retryLoad);
+        handler.postDelayed(retryLoad, RETRY_MS);
+      }
+    });
     setContentView(web);
 
-    String url = getIntent().getDataString();
-    web.loadUrl(url != null ? url : DEFAULT_URL);
+    load(getIntent().getDataString());
+  }
+
+  /** Loads an explicitly passed URL and remembers it; with none, loads the remembered one. */
+  private void load(String url) {
+    SharedPreferences prefs = getSharedPreferences("kiosk", MODE_PRIVATE);
+    if (url != null) {
+      prefs.edit().putString("url", url).commit();
+    } else {
+      url = prefs.getString("url", DEFAULT_URL);
+    }
+    currentUrl = url;
+    handler.removeCallbacks(retryLoad);
+    web.loadUrl(url);
   }
 
   @Override
@@ -73,7 +120,7 @@ public class MainActivity extends Activity {
     super.onNewIntent(intent);
     applyDebugFlag(intent);
     String url = intent.getDataString();
-    if (url != null) web.loadUrl(url);
+    if (url != null) load(url);
   }
 
   /** Remote debugging only when explicitly requested; any normal launch turns it back off. */
