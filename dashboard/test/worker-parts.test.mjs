@@ -94,7 +94,7 @@ test('weather maps Open-Meteo to hour-of-day arrays and icons', () => {
   assert.equal(w.c[15], 'rain');
   assert.equal(w.c[3], 'moon');
   assert.equal(w.c[12], 'sun');
-  assert.deepEqual([w.now, w.hi, w.lo, w.cond], [61, 80, 55, 'moon']);
+  assert.deepEqual([w.now, w.hi, w.lo, w.cond, w.source], [61, 80, 55, 'moon', 'open-meteo']);
   assert.equal(condition(73, 1), 'snow');
   assert.equal(condition(95, 1), 'storm');
   assert.equal(unitsFor({}, 'US'), 'fahrenheit');

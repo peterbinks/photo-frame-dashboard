@@ -1,5 +1,6 @@
-// Open-Meteo (no key) → the weather shape the views use. Hourly arrays start at today's local
-// midnight and cover 48 hours, so index = hour of day today (24–47 = tomorrow).
+// Open-Meteo (no key) → the weather shape the views use; the fallback when the National Weather
+// Service (nws.js) can't answer. Hourly arrays start at today's local midnight and cover 48 hours,
+// so index = hour of day today (24–47 = tomorrow).
 import { dayKey } from './time.js';
 
 // WMO weather codes → icon names in js/icons.js
@@ -52,6 +53,7 @@ export function mapWeather(raw, { tz, units, city, now = Date.now() }) {
     hi: r((D.temperature_2m_max || [])[di]), lo: r((D.temperature_2m_min || [])[di]),
     feels: r(C.apparent_temperature), humidity: r(C.relative_humidity_2m), wind: r(C.wind_speed_10m),
     t, c, p,
+    source: 'open-meteo',
     updated: now,
   };
 }

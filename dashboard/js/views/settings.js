@@ -130,6 +130,11 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
   }
 
   // ------------------------------------------------------------ sections
+  // "National Weather Service · KORD" (with the observing station) or "Open-Meteo"
+  function weatherSource(W) {
+    if (W.source === 'nws') return 'National Weather Service' + (W.station ? ' · ' + esc(W.station) : '');
+    return W.source === 'open-meteo' ? 'Open-Meteo' : esc(W.source);
+  }
   function syncSection() {
     var st = App.sync.status, v = App.version;
     var rows = SOURCES.map(function (s) {
@@ -137,6 +142,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
       var sub = x.lastError
         ? '<span class="st-bad">' + esc(x.lastError) + '</span>' + (x.lastOk ? ' · last good ' + ago(x.lastOk) : '')
         : x.lastOk ? 'Updated ' + ago(x.lastOk) : x.loading ? 'Loading…' : 'Not loaded yet';
+      if (s[0] === 'weather' && D.weather && D.weather.source) sub += ' · ' + weatherSource(D.weather);
       return '<div class="st-row"><i class="st-dot st-dot--' + tone + '"></i><div class="st-main"><b>' + s[1] + '</b><small>' + sub + '</small></div>' +
         '<button class="icon-btn st-refresh' + (x.loading ? ' is-busy' : '') + '" data-refresh="' + s[0] + '" aria-label="Refresh ' + s[1] + '">' + App.icon('refresh', 26) + '</button></div>';
     }).join('');
@@ -514,7 +520,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
   // Display --------------------------------------------------------------------------
   function citySheet() {
     formSheet('<div class="label">Weather</div><h2 class="serif sheet-h">Weather location</h2>' +
-      '<div class="st-input-row"><input class="st-input" data-f="city" placeholder="City" autocomplete="off" enterkeyhint="search">' +
+      '<div class="st-input-row"><input class="st-input" data-f="city" placeholder="City or US ZIP code" autocomplete="off" enterkeyhint="search">' +
       '<button class="btn btn--solid" data-search>Search</button></div>' +
       '<p class="st-err" style="display:none"></p><div class="st-places"></div>',
     function (s, close) {
@@ -533,7 +539,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
       });
       function search() {
         var q = input.value.trim(), b = s.querySelector('[data-search]');
-        if (q.length < 2) { sheetError(s, 'Type a city name'); return; }
+        if (q.length < 2) { sheetError(s, 'Type a city name or US ZIP code'); return; }
         sheetError(s, '');
         busy(b, true, 'Search');
         check('city', q).then(function (r) {

@@ -177,7 +177,9 @@
     var i0 = wxIndex(W);
     for (var i = 0; i < count && i0 + i < W.t.length; i++) {
       var x = (i0 + i) % 24, j = i0 + i;
-      out.push({ h: x, t: W.t[j], c: W.c[j], p: W.p[j], label: i === 0 ? 'Now' : App.display.clock24 ? two(x) : ((x % 12 || 12) + (x >= 12 ? 'p' : 'a')) });
+      // "Now" shows the current reading (a station observation with NWS), like the big number
+      var cur = i === 0 && W.now != null;
+      out.push({ h: x, t: cur ? W.now : W.t[j], c: cur && W.cond ? W.cond : W.c[j], p: W.p[j], label: i === 0 ? 'Now' : App.display.clock24 ? two(x) : ((x % 12 || 12) + (x >= 12 ? 'p' : 'a')) });
     }
     return out;
   };

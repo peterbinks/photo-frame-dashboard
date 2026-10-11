@@ -1,0 +1,46 @@
+{
+ "properties": {
+  "periods": [
+   {
+    "name": "This Afternoon",
+    "startTime": "2026-10-11T14:00:00-05:00",
+    "endTime": "2026-10-11T18:00:00-05:00",
+    "isDaytime": true,
+    "temperature": 72,
+    "temperatureUnit": "F",
+    "icon": "https://api.weather.gov/icons/land/day/skc?size=medium",
+    "shortForecast": "Sunny"
+   },
+   {
+    "name": "Tonight",
+    "startTime": "2026-10-11T18:00:00-05:00",
+    "endTime": "2026-10-12T06:00:00-05:00",
+    "isDaytime": false,
+    "temperature": 63,
+    "temperatureUnit": "F",
+    "icon": "https://api.weather.gov/icons/land/night/sct?size=medium",
+    "shortForecast": "Partly Cloudy"
+   },
+   {
+    "name": "Columbus Day",
+    "startTime": "2026-10-12T06:00:00-05:00",
+    "endTime": "2026-10-12T18:00:00-05:00",
+    "isDaytime": true,
+    "temperature": 86,
+    "temperatureUnit": "F",
+    "icon": "https://api.weather.gov/icons/land/day/sct?size=medium",
+    "shortForecast": "Mostly Sunny"
+   },
+   {
+    "name": "Monday Night",
+    "startTime": "2026-10-12T18:00:00-05:00",
+    "endTime": "2026-10-13T06:00:00-05:00",
+    "isDaytime": false,
+    "temperature": 71,
+    "temperatureUnit": "F",
+    "icon": "https://api.weather.gov/icons/land/night/few?size=medium",
+    "shortForecast": "Mostly Clear"
+   }
+  ]
+ }
+}

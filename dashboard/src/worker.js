@@ -2,15 +2,16 @@
 import { prefilterIcs, windowFromQuery, hashId } from './ics-filter.js';
 import { fetchAlbum, fetchAssetUrls, fetchCloudAlbum, cloudPhotoUrl } from './icloud.js';
 import { fetchWeather, mapWeather } from './weather.js';
+import { nwsWeather } from './nws.js';
 import { STATE_KEY, seedState, normalize, purgeMembers, rollover, sanitize } from './state.js';
-import { SETTINGS_KEY, seedSettings, applySettings, runtimeConfig, removedIds, cleanCalendarUrl, cleanAlbumUrl, icsSummary, mapPlaces } from './settings.js';
+import { SETTINGS_KEY, seedSettings, applySettings, runtimeConfig, removedIds, cleanCalendarUrl, cleanAlbumUrl, icsSummary, mapPlaces, mapZip } from './settings.js';
 import { createThrottle } from './fresh.js';
 import { isValidTz, dayKey } from './time.js';
 
 const COOKIE = 'hq_key';
 const COOKIE_MAX_AGE = 400 * 24 * 3600; // browsers cap cookie lifetime at 400 days
 const ICS_TTL = 5 * 60;
-const WEATHER_TTL = 15 * 60;
+const WEATHER_TTL = 10 * 60;
 const ALBUM_TTL = 15 * 60;
 const PHOTO_TTL = 30 * 24 * 3600;
 const SETTINGS_MEMO_MS = 10 * 1000;
@@ -190,8 +191,16 @@ async function handleCheck(request) {
   }
   if (body.kind === 'city') {
     const q = value.replace(/\s+/g, ' ').trim();
-    if (q.length < 2 || q.length > 80) return json({ ok: false, error: 'Type a city name' }, 400);
+    if (q.length < 2 || q.length > 80) return json({ ok: false, error: 'Type a city name or US ZIP code' }, 400);
     try {
+      // Open-Meteo's geocoder doesn't know ZIP codes; zippopotam.us (no key) does.
+      if (/^\d{5}$/.test(q)) {
+        const res = await fetch('https://api.zippopotam.us/us/' + q, { signal: AbortSignal.timeout(CHECK_TIMEOUT_MS) });
+        if (res.status === 404) return json({ ok: false, error: 'No US ZIP code ' + q + ' found' });
+        if (!res.ok) return json({ ok: false, error: 'ZIP code search answered HTTP ' + res.status });
+        const places = mapZip(await res.json(), q);
+        return json(places.length ? { ok: true, places } : { ok: false, error: 'No US ZIP code ' + q + ' found' });
+      }
       const res = await fetch('https://geocoding-api.open-meteo.com/v1/search?count=6&language=en&format=json&name=' + encodeURIComponent(q), { signal: AbortSignal.timeout(CHECK_TIMEOUT_MS) });
       if (!res.ok) return json({ ok: false, error: 'Place search answered HTTP ' + res.status });
       const places = mapPlaces(await res.json());
@@ -241,14 +250,26 @@ async function handleCalendar(request, url, cfg, ctx) {
 }
 
 // ------------------------------------------------------------------ weather
-async function handleWeather(url, cfg, ctx) {
+// National Weather Service for US locations (observations + NWS forecasts), Open-Meteo for the rest
+// and whenever NWS fails. The mapped result is cached; the key carries the local day so hi/lo and
+// the midnight-based hourly arrays roll over at midnight.
+async function handleWeather(url, env, cfg, ctx) {
   if (cfg.lat == null || cfg.lon == null) return json({ error: 'No location — pick a city in Settings → Display' }, 503);
   const fresh = freshness(url, 'weather');
-  const lat = Math.round(cfg.lat * 100) / 100, lon = Math.round(cfg.lon * 100) / 100;
-  const key = 'wx:' + lat + ',' + lon + ':' + cfg.units + ':' + cfg.tz;
+  const lat = Math.round(cfg.lat * 1e4) / 1e4, lon = Math.round(cfg.lon * 1e4) / 1e4;
+  const key = 'wx:' + lat + ',' + lon + ':' + cfg.units + ':' + cfg.tz + ':' + dayKey(Date.now(), cfg.tz);
   try {
-    const raw = await cached(key, WEATHER_TTL, ctx, fresh.force, 'json', () => fetchWeather({ lat, lon, tz: cfg.tz, units: cfg.units }));
-    return json(mapWeather(raw, { tz: cfg.tz, units: cfg.units, city: cfg.city }), 200, fresh.headers);
+    const w = await cached(key, WEATHER_TTL, ctx, fresh.force, 'json', async () => {
+      try {
+        return await nwsWeather({ lat, lon, tz: cfg.tz, units: cfg.units, city: cfg.city, kv: env.STATE, ctx });
+      } catch (e) {
+        console.warn('NWS weather unavailable, using Open-Meteo: ' + ((e && e.message) || e));
+      }
+      const lat2 = Math.round(cfg.lat * 100) / 100, lon2 = Math.round(cfg.lon * 100) / 100;
+      const raw = await fetchWeather({ lat: lat2, lon: lon2, tz: cfg.tz, units: cfg.units });
+      return mapWeather(raw, { tz: cfg.tz, units: cfg.units, city: cfg.city });
+    });
+    return json(w, 200, fresh.headers);
   } catch (e) {
     return json({ error: String((e && e.message) || e) }, 502, fresh.headers);
   }
@@ -445,7 +466,7 @@ export default {
       if (request.method !== 'GET') return json({ error: 'method not allowed' }, 405);
       if (path === '/api/config') return handleConfig(cfg);
       if (path === '/api/calendar') return await handleCalendar(request, url, cfg, ctx);
-      if (path === '/api/weather') return await handleWeather(url, cfg, ctx);
+      if (path === '/api/weather') return await handleWeather(url, env, cfg, ctx);
       if (path === '/api/photos') return await handlePhotos(url, env, ctx, cfg);
       const m = path.match(/^\/api\/photo\/([A-Za-z0-9-]{1,40})\/([^/]+)$/);
       if (m) return await handlePhoto(env, ctx, cfg, m[1], decodeURIComponent(m[2]));

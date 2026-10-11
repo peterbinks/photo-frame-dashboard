@@ -26,8 +26,9 @@ built without Gradle, that shows it. Hold two fingers still for 1.5 s to exit to
 
 The dashboard shows real data: Google Calendar (each calendar's secret iCal address), iCloud
 Shared Album photos (proxied through the Worker so the frame's old trust store never talks to
-Apple's CDN), Open-Meteo weather, chores and a shopping list shared between devices (Workers KV),
-and Home Assistant control straight from the frame over your LAN. To make it yours:
+Apple's CDN), weather from the US National Weather Service (station observations + NWS forecasts;
+Open-Meteo outside the US or when NWS is down), chores and a shopping list shared between devices
+(Workers KV), and Home Assistant control straight from the frame over your LAN. To make it yours:
 
 ```sh
 cd dashboard

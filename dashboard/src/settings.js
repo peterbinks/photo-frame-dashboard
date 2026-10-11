@@ -387,3 +387,14 @@ export function mapPlaces(json) {
     tz: r.timezone || '',
   })).filter((p) => p.name && isFinite(p.lat) && isFinite(p.lon));
 }
+
+/** zippopotam.us answer for a US ZIP code → place candidates ("Chicago, IL 60618"). */
+export function mapZip(json, zip) {
+  return ((json && json.places) || []).slice(0, 6).map((r) => ({
+    name: ([r['place name'], r['state abbreviation']].filter(Boolean).join(', ') + ' ' + zip).trim(),
+    region: [r.state, json.country].filter(Boolean).join(', '),
+    lat: Math.round(+r.latitude * 1e4) / 1e4,
+    lon: Math.round(+r.longitude * 1e4) / 1e4,
+    tz: '',
+  })).filter((p) => isFinite(p.lat) && isFinite(p.lon) && Math.abs(p.lat) <= 90 && Math.abs(p.lon) <= 180);
+}

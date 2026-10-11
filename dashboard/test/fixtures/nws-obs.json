@@ -1,0 +1,28 @@
+{
+ "properties": {
+  "stationId": "KMDW",
+  "timestamp": "2026-10-11T19:25:00+00:00",
+  "textDescription": "",
+  "icon": null,
+  "temperature": {
+   "unitCode": "wmoUnit:degC",
+   "value": 24
+  },
+  "relativeHumidity": {
+   "unitCode": "wmoUnit:percent",
+   "value": 53.576211354435
+  },
+  "windSpeed": {
+   "unitCode": "wmoUnit:km_h-1",
+   "value": 0
+  },
+  "heatIndex": {
+   "unitCode": "wmoUnit:degC",
+   "value": 23.854489963143333
+  },
+  "windChill": {
+   "unitCode": "wmoUnit:degC",
+   "value": null
+  }
+ }
+}

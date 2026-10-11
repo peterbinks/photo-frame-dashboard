@@ -1,0 +1,17 @@
+{
+ "properties": {
+  "gridId": "LOT",
+  "gridX": 75,
+  "gridY": 72,
+  "forecast": "https://api.weather.gov/gridpoints/LOT/75,72/forecast",
+  "forecastHourly": "https://api.weather.gov/gridpoints/LOT/75,72/forecast/hourly",
+  "observationStations": "https://api.weather.gov/gridpoints/LOT/75,72/stations",
+  "timeZone": "America/Chicago",
+  "relativeLocation": {
+   "properties": {
+    "city": "Chicago",
+    "state": "IL"
+   }
+  }
+ }
+}

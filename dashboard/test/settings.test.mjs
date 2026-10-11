@@ -3,7 +3,9 @@
 // against an in-memory KV and a stubbed network.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { applySettings, seedSettings, removedIds, icsSummary, mapPlaces, PALETTE } from '../src/settings.js';
+import { applySettings, seedSettings, removedIds, icsSummary, mapPlaces, mapZip, PALETTE } from '../src/settings.js';
+import { readFileSync } from 'node:fs';
+import { wallToEpoch } from '../src/time.js';
 import { purgeMembers } from '../src/state.js';
 import { createThrottle } from '../src/fresh.js';
 import { reloadDecision, QUIET_MS } from '../js/reload-policy.js';
@@ -176,7 +178,7 @@ if (!crypto.subtle.timingSafeEqual) {
 globalThis.caches = { default: { match: async () => undefined, put: async () => {} } };
 
 let instance = 0;
-async function harness(envExtra = {}) {
+async function harness(envExtra = {}, route = null) {
   const worker = (await import('../src/worker.js?i=' + ++instance)).default; // fresh module = fresh memory caches
   const kv = new Map();
   const env = {
@@ -191,6 +193,8 @@ async function harness(envExtra = {}) {
   globalThis.fetch = async (url) => {
     const u = String(url);
     calls.push(u);
+    const routed = route && (await route(u));
+    if (routed) return routed;
     if (u.startsWith('https://api.open-meteo.com/')) return Response.json({ hourly: { time: [], temperature_2m: [], weather_code: [], is_day: [], precipitation_probability: [] }, current: {}, daily: {} });
     if (u.startsWith('https://geocoding-api.open-meteo.com/')) return Response.json({ results: [{ name: 'Chicago', admin1: 'Illinois', country: 'United States', latitude: 41.85, longitude: -87.65 }] });
     if (u.includes('.ics')) return new Response('BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nEND:VEVENT\r\nEND:VCALENDAR');
@@ -305,3 +309,81 @@ test('worker: link checks', async () => {
   assert.equal((await h.call('/api/settings/check', { method: 'POST', body: { kind: 'album', value: 'https://example.com' } })).status, 400);
   assert.equal((await h.call('/api/settings/check', { method: 'POST', body: { kind: 'nope', value: 'x' } })).status, 400);
 });
+
+const fixture = (name) => JSON.parse(readFileSync(new URL('./fixtures/' + name, import.meta.url), 'utf8'));
+
+test('worker: a 5-digit query is a US ZIP code (zippopotam.us), anything else a city name', async () => {
+  const ZIP = fixture('zip-60601.json');
+  assert.deepEqual(mapZip(ZIP, '60601'), [{ name: 'Chicago, IL 60601', region: 'Illinois, United States', lat: 41.8858, lon: -87.6181, tz: '' }]);
+  assert.deepEqual(mapZip({}, '00000'), []);
+  const h = await harness({}, (u) => {
+    if (u === 'https://api.zippopotam.us/us/60601') return Response.json(ZIP);
+    if (u.startsWith('https://api.zippopotam.us/')) return Response.json({}, { status: 404 });
+  });
+  const zip = await h.call('/api/settings/check', { method: 'POST', body: { kind: 'city', value: ' 60601 ' } });
+  assert.equal(zip.body.ok, true);
+  assert.equal(zip.body.places[0].name, 'Chicago, IL 60601');
+  assert.deepEqual([zip.body.places[0].lat, zip.body.places[0].lon], [41.8858, -87.6181]);
+  const none = await h.call('/api/settings/check', { method: 'POST', body: { kind: 'city', value: '00000' } });
+  assert.deepEqual(none.body, { ok: false, error: 'No US ZIP code 00000 found' });
+  assert.equal(h.calls.filter((u) => u.startsWith('https://geocoding-api.open-meteo.com/')).length, 0);
+  await h.call('/api/settings/check', { method: 'POST', body: { kind: 'city', value: '606018' } });
+  assert.equal(h.calls.filter((u) => u.startsWith('https://geocoding-api.open-meteo.com/')).length, 1, 'not a ZIP: city search');
+});
+
+// api.weather.gov for the seeded location (41.85,-87.65 → LOT 75,72, KMDW), captured 2026-10-11
+function nwsRoute(overrides = {}) {
+  const routes = {
+    '/points/41.85,-87.65': () => Response.json(fixture('nws-points.json')),
+    '/gridpoints/LOT/75,72/stations': () => Response.json(fixture('nws-stations.json')),
+    '/gridpoints/LOT/75,72/forecast/hourly': () => Response.json(fixture('nws-hourly.json')),
+    '/gridpoints/LOT/75,72/forecast': () => Response.json(fixture('nws-forecast.json')),
+    '/stations/KMDW/observations/latest': () => Response.json(fixture('nws-obs.json')),
+    ...overrides,
+  };
+  return (u) => {
+    if (!u.startsWith('https://api.weather.gov/')) return null;
+    const r = routes[new URL(u).pathname];
+    return r ? r() : Response.json({}, { status: 404 });
+  };
+}
+async function atFixtureTime(fn) {
+  const real = Date.now, t = wallToEpoch(2026, 10, 11, 14, 39, 0, 'America/Chicago');
+  Date.now = () => t;
+  try { return await fn(); } finally { Date.now = real; }
+}
+const nwsCalls = (h) => h.calls.filter((u) => u.startsWith('https://api.weather.gov/')).length;
+const omCalls = (h) => h.calls.filter((u) => u.startsWith('https://api.open-meteo.com/')).length;
+
+test('worker: weather from the National Weather Service, cached', () => atFixtureTime(async () => {
+  const h = await harness({}, nwsRoute());
+  const w = await h.call('/api/weather');
+  assert.equal(w.status, 200);
+  assert.deepEqual([w.body.source, w.body.station, w.body.now, w.body.t[14], w.body.hi, w.body.lo], ['nws', 'KMDW', 75, 71, 75, 63]);
+  assert.equal(w.body.city, 'Chicago');
+  assert.equal(nwsCalls(h), 5, 'points + stations + hourly + forecast + observation');
+  assert.equal(omCalls(h), 0);
+  await h.call('/api/weather');
+  assert.equal(nwsCalls(h), 5, 'cached');
+  assert.equal((await h.call('/api/weather?fresh=1')).body.source, 'nws');
+  assert.equal(nwsCalls(h), 8, 'fresh: point from KV, 3 requests');
+}));
+
+test('worker: NWS 500, timeout or a non-US 404 → Open-Meteo', () => atFixtureTime(async () => {
+  const fail = (res) => nwsRoute({ '/gridpoints/LOT/75,72/forecast/hourly': res });
+  const timeout = () => { throw new DOMException('The operation was aborted due to timeout', 'TimeoutError'); };
+  for (const route of [fail(() => new Response('', { status: 500 })), fail(timeout), nwsRoute({ '/points/41.85,-87.65': () => Response.json({}, { status: 404 }) })]) {
+    const h = await harness({}, route);
+    const w = await h.call('/api/weather');
+    assert.equal(w.status, 200);
+    assert.equal(w.body.source, 'open-meteo');
+    assert.equal(w.body.station, undefined);
+    assert.equal(omCalls(h), 1);
+  }
+  const h = await harness({}, nwsRoute({ '/points/41.85,-87.65': () => Response.json({}, { status: 404 }) }));
+  await h.call('/api/weather');
+  assert.equal(nwsCalls(h), 1);
+  assert.equal((await h.call('/api/weather?fresh=1')).body.source, 'open-meteo');
+  assert.equal(nwsCalls(h), 1, 'a non-US point is remembered');
+  assert.equal(omCalls(h), 2);
+}));
