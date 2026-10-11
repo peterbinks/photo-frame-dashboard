@@ -1,8 +1,8 @@
-// Core shell: router, demo clock, idle/ambient, toasts, sheets, helpers.
+// Core shell: router, clock, idle/ambient, toasts, sheets, helpers.
 (function () {
   'use strict';
   var D = window.DATA;
-  var App = window.App = { state: D, views: {}, current: null, mode: 'day', calMode: 'normal' };
+  var App = window.App = { state: D, views: {}, current: null, mode: 'day' };
   var $ = App.$ = function (s, r) { return (r || document).querySelector(s); };
   App.$$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
@@ -11,36 +11,39 @@
   App.on = function (e, fn) { (handlers[e] = handlers[e] || []).push(fn); };
   App.emit = function (e, a) { (handlers[e] || []).forEach(function (fn) { fn(a); }); };
 
-  // ------------------------------------------------------------ time (demo clock)
-  var offset = 0;
-  App.now = function () { return new Date(Date.now() + offset); };
-  App.setTime = function (h, m) {
-    if (h == null) offset = 0;
-    else { var d = new Date(); d.setHours(h, m, 0, 0); offset = d - Date.now(); }
-    lastMin = -1;
-    App.emit('time');
-    App.rerender();
-  };
+  // ------------------------------------------------------------ time
+  App.now = function () { return new Date(); };
   App.dayStart = function (d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
   App.addDays = function (d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; };
   App.sameDay = function (a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); };
-  App.isNight = function () { var h = App.now().getHours(); return h >= 22 || h < 6; };
+  // Display settings (Settings → Display; js/sync.js fills them from /api/config)
+  App.display = { clock24: false, nightFrom: 22, nightTo: 6, idleMinutes: 2, slideSeconds: 15 };
+  // Night screen hours, e.g. 22 → 6 wraps midnight; equal hours = never.
+  App.isNight = function () {
+    var d = App.display, h = App.now().getHours();
+    if (d.nightFrom === d.nightTo) return false;
+    return d.nightFrom < d.nightTo ? h >= d.nightFrom && h < d.nightTo : h >= d.nightFrom || h < d.nightTo;
+  };
+  function two(n) { return (n < 10 ? '0' : '') + n; }
 
   var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   var MON_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
   App.fmt = {
+    // "3:45 PM" ("3:45" with ampm === false) or "15:45" on a 24-hour clock
     time: function (d, ampm) {
       var h = d.getHours(), m = d.getMinutes();
-      var s = (h % 12 || 12) + ':' + (m < 10 ? '0' : '') + m;
+      if (App.display.clock24) return two(h) + ':' + two(m);
+      var s = (h % 12 || 12) + ':' + two(m);
       return ampm === false ? s : s + ' ' + (h >= 12 ? 'PM' : 'AM');
     },
-    // "4 PM", "3:45 PM"
+    // "4 PM", "3:45 PM" / "16:00", "15:45"
     hour: function (d) {
       var h = d.getHours(), m = d.getMinutes();
-      return (h % 12 || 12) + (m ? ':' + (m < 10 ? '0' : '') + m : '') + ' ' + (h >= 12 ? 'PM' : 'AM');
+      if (App.display.clock24) return two(h) + ':' + two(m);
+      return (h % 12 || 12) + (m ? ':' + two(m) : '') + ' ' + (h >= 12 ? 'PM' : 'AM');
     },
-    ampm: function (d) { return d.getHours() >= 12 ? 'PM' : 'AM'; },
+    ampm: function (d) { return App.display.clock24 ? '' : d.getHours() >= 12 ? 'PM' : 'AM'; },
     range: function (a, b) {
       var same = App.fmt.ampm(a) === App.fmt.ampm(b);
       return (same ? App.fmt.time(a, false) : App.fmt.time(a)) + ' – ' + App.fmt.time(b);
@@ -89,15 +92,21 @@
   };
 
   // ------------------------------------------------------------ calendar helpers
-  App.events = function () {
-    var list = D.events.slice();
-    var today = App.dayStart(App.now());
-    if (App.calMode === 'busy') list = list.concat(D.busyExtras);
-    if (App.calMode === 'empty') list = list.filter(function (e) { return e.allDay || !App.sameDay(e.start, today); });
-    return list;
-  };
+  App.events = function () { return D.events; };
   App.isFamily = function (e) { return e.people.length >= D.people.length; };
-  App.evColor = function (e) { return App.isFamily(e) ? D.family : App.person(e.people[0]); };
+  // A calendar with its own colour (config) paints its events in it; otherwise the person's colour.
+  App.evColor = function (e) {
+    if (e.color && !App.isFamily(e)) return calColor(e.color);
+    return App.isFamily(e) ? D.family : App.person(e.people[0]);
+  };
+  var calColors = {};
+  function calColor(hex) {
+    if (!calColors[hex]) {
+      var n = parseInt(hex.slice(1), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+      calColors[hex] = { id: 'cal', name: '', color: hex, rgb: r + ' ' + g + ' ' + b, ink: 0.299 * r + 0.587 * g + 0.114 * b > 170 ? '#111111' : '#FFFFFF' };
+    }
+    return calColors[hex];
+  }
   App.timedOn = function (day, pid) {
     var s = App.dayStart(day), e = App.addDays(s, 1);
     return App.events().filter(function (ev) {
@@ -126,33 +135,49 @@
   App.currentRoutine = function () {
     var h = App.now().getHours();
     for (var i = 0; i < D.routines.length; i++) if (h >= D.routines[i].from && h < D.routines[i].to) return D.routines[i];
-    return D.routines[2];
+    return D.routines[D.routines.length - 1];
   };
+  // Weather arrays start at local midnight of W.day and run 48 hours (24–47 = tomorrow).
+  function wxIndex(W) {
+    var n = App.now(), h = n.getHours();
+    var d = W.day.split('-'), day = new Date(+d[0], +d[1] - 1, +d[2]);
+    return h + Math.round((App.dayStart(n) - day) / 864e5) * 24;
+  }
+  var WX_LABELS = { sun: 'Sunny', moon: 'Clear', partly: 'Partly cloudy', cloud: 'Overcast', rain: 'Rain', snow: 'Snow', storm: 'Thunderstorms' };
   App.weatherNow = function () {
-    var W = D.weather, h = App.now().getHours();
-    var rainAt = -1;
-    for (var i = h; i < 24; i++) if (W.p[i] >= 50) { rainAt = i; break; }
-    var summary, advice;
-    if (rainAt === h) {
-      var stop = h; while (stop < 24 && W.p[stop] >= 50) stop++;
-      summary = 'Rain until ' + App.fmt.hour(new Date(2000, 0, 1, stop));
-      advice = 'Umbrella weather';
-    } else if (rainAt > -1) {
-      summary = 'Rain from ' + App.fmt.hour(new Date(2000, 0, 1, rainAt));
-      var soccer = App.timedOn(App.now()).filter(function (e) { return /soccer/i.test(e.title) && e.start > App.now(); })[0];
-      advice = soccer ? 'Pack a rain jacket for soccer' : 'Grab a rain jacket';
-    } else {
-      summary = W.t[h] < 12 ? 'Clear and cool' : 'Dry all day';
-      advice = W.t[h] < 12 ? 'Jacket weather' : 'Light layers';
+    var W = D.weather;
+    if (!W || !W.t || !W.t.length) {
+      var msg = D.status.weather.state === 'loading' ? 'Loading weather' : 'Weather unavailable';
+      return { temp: '–', cond: 'cloud', label: msg, hi: '–', lo: '–', summary: msg, advice: 'Check back soon', hour: App.now().getHours(), none: true };
     }
-    var labels = { sun: 'Sunny', moon: 'Clear', partly: 'Partly cloudy', cloud: 'Overcast', rain: 'Rain' };
-    return { temp: W.t[h], cond: W.c[h], label: labels[W.c[h]], hi: W.hi, lo: W.lo, summary: summary, advice: advice, hour: h };
+    var i0 = Math.min(wxIndex(W), W.t.length - 1), h = App.now().getHours();
+    var end = Math.min(W.t.length, i0 + (24 - h));
+    var wetAt = -1;
+    for (var i = i0; i < end; i++) if (W.p[i] >= 50) { wetAt = i; break; }
+    var cool = W.units === 'fahrenheit' ? 54 : 12;
+    var temp = W.now != null && i0 === wxIndex(W) ? W.now : W.t[i0];
+    var cond = W.now != null && i0 === wxIndex(W) && W.cond ? W.cond : W.c[i0];
+    var summary, advice;
+    if (wetAt > -1) {
+      var word = W.c[wetAt] === 'snow' ? 'Snow' : W.c[wetAt] === 'storm' ? 'Storms' : 'Rain';
+      if (wetAt === i0) {
+        var stop = i0; while (stop < end && W.p[stop] >= 50) stop++;
+        summary = stop >= end ? word + ' all day' : word + ' until ' + App.fmt.hour(new Date(2000, 0, 1, stop % 24));
+      } else summary = word + ' from ' + App.fmt.hour(new Date(2000, 0, 1, wetAt % 24));
+      advice = word === 'Snow' ? 'Boots and a warm coat' : 'Grab a rain jacket';
+    } else {
+      summary = temp < cool ? 'Dry and cool' : 'Dry all day';
+      advice = temp < cool ? 'Jacket weather' : 'Light layers';
+    }
+    return { temp: temp, cond: cond, label: WX_LABELS[cond] || '', hi: W.hi, lo: W.lo, summary: summary, advice: advice, hour: h };
   };
   App.hourly = function (count) {
-    var W = D.weather, h = App.now().getHours(), out = [];
-    for (var i = 0; i < count; i++) {
-      var x = (h + i) % 24;
-      out.push({ h: x, t: W.t[x], c: W.c[x], p: W.p[x], label: i === 0 ? 'Now' : ((x % 12 || 12) + (x >= 12 ? 'p' : 'a')) });
+    var W = D.weather, out = [];
+    if (!W || !W.t || !W.t.length) return out;
+    var i0 = wxIndex(W);
+    for (var i = 0; i < count && i0 + i < W.t.length; i++) {
+      var x = (i0 + i) % 24, j = i0 + i;
+      out.push({ h: x, t: W.t[j], c: W.c[j], p: W.p[j], label: i === 0 ? 'Now' : App.display.clock24 ? two(x) : ((x % 12 || 12) + (x >= 12 ? 'p' : 'a')) });
     }
     return out;
   };
@@ -175,6 +200,8 @@
     App.$$('.view').forEach(function (v) { v.classList.toggle('is-active', v.dataset.view === name); });
     App.$$('.rail-item').forEach(function (b) { b.classList.toggle('is-active', b.dataset.go === name); });
     App.current = name;
+    $('#stage').setAttribute('data-view', name);
+    fit();
     var view = App.views[name];
     if (!view._built || view._dirty || opts.rerender || (view.minutely && view._min !== minuteKey())) build(name, opts);
     else if (view.resume) view.resume($('#view-' + name));
@@ -190,14 +217,14 @@
     el.classList.remove('is-warming');
   }
   // Pre-build (startup) and re-build (after data changes) hidden views in the background, one per
-  // slot, so navigating to them never pays the rebuild cost.
+  // slot, so navigating to them never pays the rebuild cost. Lazy views (Settings) build on visit.
   var refreshTimer = null;
   function refreshStale(delay) {
     clearTimeout(refreshTimer);
     refreshTimer = setTimeout(function next() {
       var name = Object.keys(App.views).filter(function (k) {
         var v = App.views[k];
-        return k !== App.current && (!v._built || v._dirty);
+        return k !== App.current && !v.lazy && (!v._built || v._dirty);
       })[0];
       if (!name) return;
       prebuild(name);
@@ -290,15 +317,19 @@
   };
 
   // ------------------------------------------------------------ idle
-  App.idle = { home: 60, ambient: 120 };
+  // Back to Today after a minute; ambient slideshow (or the night clock) after Settings → Display
+  // "idle" minutes (0 = never). Never while someone is typing.
+  App.idle = { home: 60 };
   var idleSec = 0;
+  function typing() { var a = document.activeElement; return !!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA'); }
   function onIdleTick() {
     idleSec++;
-    var blocked = $('#takeover').classList.contains('is-open');
+    var blocked = $('#takeover').classList.contains('is-open') || typing();
     if (App.mode === 'nightdash' && idleSec >= 20) { App.setMode('night'); return; }
     if (App.mode !== 'day' || blocked) return;
+    var ambient = App.display.idleMinutes * 60;
     if (idleSec === App.idle.home && App.current !== 'home') { App.closeSheet(); App.go('home'); }
-    if (idleSec >= App.idle.ambient) {
+    if (ambient && idleSec >= Math.max(ambient, App.idle.home)) {
       App.closeSheet();
       App.go('home');
       App.setMode(App.isNight() ? 'night' : 'ambient');
@@ -306,20 +337,29 @@
   }
   App.resetIdle = function () { idleSec = 0; };
 
-  // ------------------------------------------------------------ stage scaling (desktop preview only)
+  // ------------------------------------------------------------ stage scaling
+  // The fixed 1280×800 stage is scaled to fit (desktop preview, phones). On a phone the Settings
+  // view instead fills the screen at its natural size (index.html switches phones to a
+  // device-width viewport), so long links can be pasted and read.
+  App.phone = document.documentElement.classList.contains('is-phone');
   function fit() {
     var s = Math.min(window.innerWidth / 1280, window.innerHeight / 800);
-    $('#stage').style.transform = Math.abs(s - 1) < 0.01 ? '' : 'scale(' + s + ')';
+    var page = App.phone && App.current === 'settings';
+    $('#stage').style.transform = page || Math.abs(s - 1) < 0.01 ? '' : 'scale(' + s + ')';
   }
 
   // ------------------------------------------------------------ clock tick
-  var lastMin = -1;
+  var lastMin = -1, lastDay = -1;
+  App.repaintClock = function () { lastMin = -1; };
   function tick() {
     var n = App.now();
     App.emit('second', n);
     if (n.getMinutes() !== lastMin) {
       lastMin = n.getMinutes();
       $('#railClock').innerHTML = '<b>' + App.fmt.time(n, false) + '</b><span>' + App.fmt.ampm(n) + '</span>';
+      // Midnight: views jump to the new day (calendar, routine) before the minute repaint
+      if (lastDay !== -1 && n.getDate() !== lastDay) { App.emit('time'); App.rerender(); }
+      lastDay = n.getDate();
       App.emit('minute', n);
     }
     onIdleTick();
@@ -327,9 +367,6 @@
 
   // ------------------------------------------------------------ boot
   App.start = function () {
-    App.setTime(15, 18); // demo default: a busy weekday afternoon
-    fit();
-    window.addEventListener('resize', fit);
     // Switch tabs the instant a finger lands (pointerdown), not on release. Keyboard "clicks"
     // (detail === 0) still work.
     $('#rail').addEventListener('pointerdown', function (e) {
@@ -341,13 +378,17 @@
       if (b && e.detail === 0) App.go(b.dataset.go);
     });
     document.addEventListener('pointerdown', App.resetIdle, true);
+    document.addEventListener('keydown', App.resetIdle, true);
     window.addEventListener('hashchange', function () { App.go(location.hash.slice(1)); });
     App.go(location.hash.slice(1) || 'home');
     tick();
     setInterval(tick, 1000);
     App.emit('ready');
     refreshStale(1500);
-    setTimeout(function () { App.toast('Tip: press and hold the <b>clock</b> in the sidebar for demo controls', { ms: 6000, icon: 'bolt' }); }, 1200);
   };
-  document.addEventListener('DOMContentLoaded', function () { App.start(); });
+  document.addEventListener('DOMContentLoaded', function () {
+    fit();
+    window.addEventListener('resize', fit);
+    App.boot().then(App.start);
+  });
 })();

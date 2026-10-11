@@ -5,6 +5,12 @@
 .kb { position: absolute; top: 0; right: 0; bottom: 0; left: 0; overflow: hidden; background: linear-gradient(135deg, #3B3934, #111); }
 .blurfill { display: none; }
 .slide--fit .fitimg { position: absolute; top: 0; left: 50%; width: auto; height: 100%; transform: translateX(-50%); object-fit: contain; }
+.ph-empty {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; padding: 24px;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  background: linear-gradient(135deg, #3B3934, #111); color: rgba(255, 255, 255, .8); font-size: 18px; line-height: 1.4;
+}
+.ph-empty b { display: block; font-size: 1.8em; font-weight: 400; color: #fff; margin-bottom: 6px; }
 
 .slide--pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #000; }
 .slide--collage { display: grid; grid-template-columns: 3fr 2fr; grid-template-rows: 1fr 1fr; gap: 6px; background: #000; }

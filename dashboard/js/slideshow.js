@@ -3,14 +3,12 @@
   'use strict';
   var D = window.DATA;
 
-  function src(p, big) {
-    var w = p.o === 'p' ? 800 : 1600, h = p.o === 'p' ? 1200 : 1000;
-    if (!big) { w = Math.round(w / 2); h = Math.round(h / 2); }
-    return App.img(p.seed, w, h);
-  }
+  // Photos are proxied by the Worker (/api/photo/…) so they load from the dashboard's own origin.
+  function src(p) { return p.url; }
   App.photoSrc = src;
 
-  function parseDate(p) { var a = p.date.split('-'); return new Date(+a[0], +a[1] - 1, +a[2]); }
+  // ISO timestamp from iCloud → local calendar date on the frame
+  function parseDate(p) { var d = new Date(p.date); return isNaN(d) ? App.now() : new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
   App.photoMeta = function (p) {
     var d = parseDate(p), now = App.now();
     var years = now.getFullYear() - d.getFullYear();
@@ -63,14 +61,20 @@
     }
   };
 
+  // Seconds per photo come from Settings → Display (App.display.slideSeconds).
   App.Slideshow = function (el, opts) {
     this.el = el;
-    this.o = Object.assign({ layout: 'auto', interval: 15000, captions: true }, opts || {});
+    this.o = Object.assign({ layout: 'auto', captions: true, emptyText: true }, opts || {});
     this.queue = [];
     this.history = [];
     this.count = 0;
     this.timer = null;
     this.current = null;
+    var self = this;
+    // Photos arrive after boot (and refresh every 30 min): start showing them right away.
+    App.on('photos', function () { if (self.timer && !self.current) self.next(); });
+    // A new interval applies to running slideshows straight away.
+    App.on('config', function () { if (self.timer) self.restart(); });
   };
   var S = App.Slideshow.prototype;
 
@@ -100,13 +104,15 @@
     }
     var ps = [first];
     if (layout === 'pair') {
-      if (first.o !== 'p') { first = sibling(function (x) { return x.o === 'p'; }); ps = [first]; }
+      if (first.o !== 'p') { var portrait = sibling(function (x) { return x.o === 'p'; }); if (portrait) { first = portrait; ps = [first]; } }
       ps.push(sibling(function (x) { return x !== first && x.o === 'p' && x.tag === first.tag; }) || sibling(function (x) { return x !== first && x.o === 'p'; }));
     }
     if (layout === 'collage') {
       ps.push(sibling(function (x) { return x !== first; }));
       ps.push(sibling(function (x) { return ps.indexOf(x) < 0; }));
     }
+    ps = ps.filter(Boolean);
+    if ((layout === 'pair' && ps.length < 2) || (layout === 'collage' && ps.length < 3)) { layout = 'cover'; ps = ps.slice(0, 1); }
     return { layout: layout, photos: ps };
   };
 
@@ -138,7 +144,16 @@
 
   S.next = function () {
     var s = this.pick();
-    if (!s) return;
+    if (!s) {
+      this.current = null;
+      if (this.o.emptyText) {
+        var st = D.status.photos;
+        this.el.innerHTML = '<div class="ph-empty"><div><b class="serif">' + (st.state === 'loading' ? 'Loading photos…' : App.esc(st.message || 'No photos yet')) + '</b>' +
+          (st.state === 'empty' && !D.config.albums ? '<span>Add an iCloud shared album in <i>Settings</i></span>' : '') + '</div></div>';
+      }
+      this.restart();
+      return;
+    }
     if (this.current) this.history.push(this.current);
     this.render(s);
     this.restart();
@@ -152,7 +167,7 @@
   S.restart = function () {
     var self = this;
     clearInterval(this.timer);
-    this.timer = setInterval(function () { self.next(); }, this.o.interval);
+    this.timer = setInterval(function () { self.next(); }, Math.max(5, App.display.slideSeconds || 15) * 1000);
   };
   S.start = function () { if (!this.current) this.next(); else this.restart(); };
   S.stop = function () { clearInterval(this.timer); this.timer = null; };

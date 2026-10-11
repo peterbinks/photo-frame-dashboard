@@ -4,13 +4,20 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite build && wrangler dev",
     "build": "vite build",
-    "preview": "vite preview",
-    "deploy": "vite build && wrangler deploy"
+    "deploy": "vite build && wrangler deploy",
+    "setup": "node scripts/setup.mjs",
+    "test": "node --test test/"
   },
   "devDependencies": {
     "vite": "^8.3.1",
     "wrangler": "^4.145.0"
+  },
+  "dependencies": {
+    "@fontsource-variable/archivo": "^5.3.0",
+    "@fontsource/instrument-serif": "^5.3.0",
+    "home-assistant-js-websocket": "^9.7.1",
+    "ical.js": "^2.2.1"
   }
 }

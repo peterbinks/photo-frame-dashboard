@@ -108,7 +108,9 @@
       }).join('') + '</div>' +
       nowLine([day]) + '</div>' +
       '</div></div>';
-    var empty = !App.timedOn(day).length ? '<div class="cal-empty serif">Nothing on the calendar.<br><i>A rare, quiet day.</i></div>' : '';
+    var cs = D.status.calendar;
+    var empty = !App.timedOn(day).length ? '<div class="cal-empty serif">' + (cs.state === 'ok' ? 'Nothing on the calendar.<br><i>A rare, quiet day.</i>'
+      : cs.state === 'loading' ? 'Loading the calendar…' : App.esc(cs.message || 'Calendar unavailable') + '.' + (cs.state === 'empty' ? '<br><i>Add one in Settings.</i>' : '')) + '</div>' : '';
     return '<div class="cal-day">' + ad + grid + empty + '</div>';
   }
 
@@ -182,11 +184,15 @@
 
   // ------------------------------------------------------------ header
   function title() {
-    var d = V.date, now = App.now();
-    if (V.mode === 'day') return { k: App.fmt.month(d) + ' ' + d.getFullYear() + (App.sameDay(d, now) ? ' · Today' : ' · ' + App.fmt.rel(d)), t: App.fmt.day(d) + ' <i>' + d.getDate() + '</i>' };
-    if (V.mode === '3day') { var e = App.addDays(d, 2); return { k: App.fmt.month(d) + ' ' + d.getFullYear(), t: App.fmt.dayShort(d) + ' ' + d.getDate() + ' <i>–</i> ' + App.fmt.dayShort(e) + ' ' + e.getDate() }; }
-    if (V.mode === 'week') { var w = App.addDays(d, 6); return { k: 'Next 7 days', t: App.fmt.monthShort(d) + ' ' + d.getDate() + ' <i>–</i> ' + App.fmt.monthShort(w) + ' ' + w.getDate() }; }
-    return { k: d.getFullYear(), t: App.fmt.month(d) };
+    var d = V.date, now = App.now(), t;
+    if (V.mode === 'day') t = { k: App.fmt.month(d) + ' ' + d.getFullYear() + (App.sameDay(d, now) ? ' · Today' : ' · ' + App.fmt.rel(d)), t: App.fmt.day(d) + ' <i>' + d.getDate() + '</i>' };
+    else if (V.mode === '3day') { var e = App.addDays(d, 2); t = { k: App.fmt.month(d) + ' ' + d.getFullYear(), t: App.fmt.dayShort(d) + ' ' + d.getDate() + ' <i>–</i> ' + App.fmt.dayShort(e) + ' ' + e.getDate() }; }
+    else if (V.mode === 'week') { var w = App.addDays(d, 6); t = { k: 'Next 7 days', t: App.fmt.monthShort(d) + ' ' + d.getDate() + ' <i>–</i> ' + App.fmt.monthShort(w) + ' ' + w.getDate() }; }
+    else t = { k: d.getFullYear(), t: App.fmt.month(d) };
+    // Surface calendars that failed to load (the others still show)
+    var failed = D.status.calendar.failed || [];
+    if (failed.length) t.k += ' · Couldn’t load ' + App.esc(failed.map(function (c) { return c.name; }).join(', '));
+    return t;
   }
   function header() {
     var t = title();
@@ -263,7 +269,21 @@
         return '<span class="chip" style="' + App.pstyle(x) + '">' + App.avatar(x, 32) + x.name + '</span>';
       }).join('') + '</div></div>' +
       (e.notes ? '<div class="evs-notes serif">“' + App.esc(e.notes) + '”</div>' : '') +
-      '</div></div>', { cls: 'sheet--event' });
+      (e.local ? '<div class="sheet-actions"><button class="btn btn--ghost" data-remove-ev>Remove from dashboard</button></div>' : '') +
+      '</div></div>', {
+      cls: 'sheet--event',
+      onMount: function (s, close) {
+        var rm = s.querySelector('[data-remove-ev]');
+        if (rm) rm.onclick = function () {
+          D.localEvents = D.localEvents.filter(function (x) { return x.id !== e.id; });
+          App.rebuildEvents();
+          close();
+          if (V.el) render();
+          App.emit('data');
+          App.toast('Removed <b>' + App.esc(e.title) + '</b>', { icon: 'calendar', ms: 2500 });
+        };
+      }
+    });
   };
 
   function moreSheet(ids) {
@@ -310,10 +330,10 @@
           if (!t) return;
           if (t.dataset.idea) { input.value = t.dataset.idea; }
           if (t.dataset.who) {
-            if (t.dataset.who === 'all') st.who = st.who.length === 4 ? [] : D.ALL.slice();
+            if (t.dataset.who === 'all') st.who = st.who.length === D.ALL.length ? [] : D.ALL.slice();
             else { var i = st.who.indexOf(t.dataset.who); if (i > -1) st.who.splice(i, 1); else st.who.push(t.dataset.who); }
             App.$$('[data-who]', s).forEach(function (b) {
-              b.classList.toggle('is-on', b.dataset.who === 'all' ? st.who.length === 4 : st.who.indexOf(b.dataset.who) > -1);
+              b.classList.toggle('is-on', b.dataset.who === 'all' ? st.who.length === D.ALL.length : st.who.indexOf(b.dataset.who) > -1);
             });
           }
           ['dayi', 'time', 'dur'].forEach(function (k) {
@@ -324,17 +344,19 @@
           });
           if (t.hasAttribute('data-save')) {
             var title = input.value.trim() || 'New event';
-            var who = st.who.length ? st.who.slice() : ['jordan'];
+            var who = st.who.length ? st.who.slice() : D.ALL.slice();
             var start = App.addDays(App.dayStart(now), st.day), p = st.time.split(':');
             start.setHours(+p[0], +p[1]);
-            var e = { id: D._eid(), title: title, people: who, start: start, end: new Date(+start + st.dur * 60000) };
-            D.events.push(e);
+            // Saved to the shared dashboard state (Google calendars are read-only secret feeds)
+            var e = { id: D._eid(), title: title, people: who, start: +start, end: +start + st.dur * 60000 };
+            D.localEvents.push(e);
+            App.rebuildEvents();
             close();
             V.date = App.dayStart(start); V.mode = V.mode === 'month' ? 'day' : V.mode; V.scroll = null;
             render();
             App.emit('data');
             App.toast('Added <b>' + App.esc(title) + '</b> · ' + App.fmt.rel(start) + ' ' + App.fmt.time(start), {
-              icon: 'calendar', undo: function () { D.events.splice(D.events.indexOf(e), 1); render(); App.emit('data'); }
+              icon: 'calendar', undo: function () { D.localEvents = D.localEvents.filter(function (x) { return x.id !== e.id; }); App.rebuildEvents(); render(); App.emit('data'); }
             });
           }
         });

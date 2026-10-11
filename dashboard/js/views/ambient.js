@@ -11,15 +11,22 @@
       '<div class="amb-right">' +
       '<div class="amb-wx">' + App.icon(w.cond, 44) + '<span class="num">' + w.temp + '°</span><small>' + w.summary + '</small></div>' +
       (next ? '<div class="amb-next" style="' + App.pstyle(App.evColor(next)) + '"><i></i>' + App.esc(next.title) + ' · ' + App.fmt.time(next.start) + '</div>' : '') +
-      '<div class="amb-who">' + D.people.map(function (p) { return App.avatar(p, 34, p.home ? '' : 'avatar--away'); }).join('') + '</div>' +
+      '<div class="amb-who">' + D.people.map(function (p) { return App.avatar(p, 34, p.home === false ? 'avatar--away' : ''); }).join('') + '</div>' +
       '</div>';
   }
   function nightInfo() {
     var n = App.now(), tomorrow = App.addDays(n, n.getHours() < 6 ? 0 : 1);
     var first = App.timedOn(tomorrow)[0], w = App.weatherNow();
     return '<div class="nt-time num">' + App.fmt.time(n, false) + '</div>' +
-      '<div class="nt-line">' + App.icon(w.cond, 26) + ' ' + w.temp + '° · ' + (first ? 'First up ' + App.fmt.rel(first.start).toLowerCase() + ': <b>' + App.esc(first.title) + '</b> ' + App.fmt.time(first.start) + ' · ' + App.person(first.people[0]).name : 'Nothing early tomorrow') + '</div>' +
-      '<div class="nt-lock">' + App.icon('lock', 20) + ' House locked · alarm armed</div>';
+      '<div class="nt-line">' + App.icon(w.cond, 26) + ' ' + w.temp + '° · ' + (first ? 'First up ' + App.fmt.rel(first.start).toLowerCase() + ': <b>' + App.esc(first.title) + '</b> ' + App.fmt.time(first.start) + ' · ' + App.esc(App.person(first.people[0]).name) : 'Nothing early tomorrow') + '</div>' +
+      locks();
+  }
+  // Only when Home Assistant reports locks
+  function locks() {
+    var list = D.devices.filter(function (d) { return d.type === 'lock'; });
+    if (D.status.ha.state !== 'ok' || !list.length) return '';
+    var open = list.filter(function (d) { return !d.locked; });
+    return '<div class="nt-lock">' + App.icon(open.length ? 'unlock' : 'lock', 20) + ' ' + (open.length ? App.esc(open.map(function (d) { return d.name; }).join(', ')) + ' unlocked' : 'All doors locked') + '</div>';
   }
 
   function paint() {
@@ -36,7 +43,7 @@
   App.on('ready', function () {
     $('#ambient').innerHTML = '<div class="amb-stage"></div><div class="amb-scrim"></div><div class="amb-info"></div>';
     $('#night').innerHTML = '<div class="nt-inner"></div>';
-    amb.show = new App.Slideshow($('#ambient .amb-stage'), { layout: 'cover', captions: false, interval: 14000 });
+    amb.show = new App.Slideshow($('#ambient .amb-stage'), { layout: 'cover', captions: false });
     $('#ambient').addEventListener('click', function () { App.setMode('day'); App.go('home'); });
     $('#night').addEventListener('click', function () { App.setMode('nightdash'); });
   });

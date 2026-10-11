@@ -28,7 +28,7 @@
           '  <button class="ph-btn ph-btn--fav" data-fav>' + App.icon('heart', 30) + '<span>Favourite</span></button>' +
           '  <button class="ph-btn" data-next>' + App.icon('right', 30) + '</button>' +
           '</div></div>';
-        V.show = new App.Slideshow(el.querySelector('.ph-stage'), { layout: V.layout, interval: 15000, onChange: function () { setTimeout(heart); } });
+        V.show = new App.Slideshow(el.querySelector('.ph-stage'), { layout: V.layout, onChange: function () { setTimeout(heart); } });
         el.addEventListener('click', function (e) {
           var t = e.target.closest('button');
           if (!t) return;
@@ -43,7 +43,7 @@
           if (t.hasAttribute('data-fav')) {
             var p = V.show.current && V.show.current.photos[0];
             if (!p) return;
-            p.fav = !p.fav;
+            App.toggleFav(p); // synced: favourites show up more often on every screen
             heart();
             App.toast(p.fav ? 'Added to favourites · it’ll show up more often' : 'Removed from favourites', { icon: 'heart', ms: 2500 });
           }

@@ -41,16 +41,16 @@
 .h-who .avatar--away { background: var(--paper); }
 
 /* ---- main column */
-.h-main { grid-column: 1 / 8; display: grid; grid-template-rows: 232px 1fr; gap: 16px; min-height: 0; }
+.h-main { grid-column: 1 / 8; display: grid; grid-template-rows: 200px 1fr 150px; gap: 16px; min-height: 0; }
 .h-hero-slot { display: grid; }
 .h-hero {
   display: flex; align-items: stretch; gap: 20px; width: 100%;
   background: var(--c); color: var(--c-ink);
-  border-radius: var(--r); padding: 22px 26px;
+  border-radius: var(--r); padding: 18px 24px;
   overflow: hidden; position: relative;
 }
 .h-hero-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.h-hero-title { font-size: 72px; line-height: .95; margin: 8px 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.h-hero-title { font-size: 64px; line-height: .95; margin: 6px 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .h-hero-meta { font-size: 19px; opacity: .88; }
 .h-hero-foot { margin-top: auto; display: flex; align-items: center; gap: 14px; }
 .h-hero-foot .dots i { box-shadow: 0 0 0 3px var(--c); }
@@ -59,7 +59,7 @@
 .h-hero--empty { background: var(--ink); color: var(--paper); flex-direction: column; justify-content: center; }
 .h-hero--empty .h-hero-title { white-space: normal; font-size: 56px; }
 
-.h-lanes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; min-height: 0; }
+.h-lanes { display: grid; grid-template-columns: repeat(var(--people, 4), 1fr); gap: 12px; min-height: 0; }
 .h-lane { display: flex; flex-direction: column; gap: 6px; min-width: 0; border-top: 6px solid var(--c); padding-top: 10px; }
 .h-lane-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
 .h-lane-head b { font-size: 18px; font-weight: 800; font-stretch: 80%; text-transform: uppercase; letter-spacing: .06em; }
@@ -76,9 +76,8 @@
 .h-free { font-size: 21px; color: var(--mute); padding: 6px 2px; line-height: 1.1; }
 .h-more { min-height: 36px; margin-top: auto; font-size: 16px; font-weight: 800; font-stretch: 75%; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); text-align: left; padding: 0 12px; }
 
-/* ---- side column */
-.h-side { grid-column: 8 / 13; display: grid; grid-template-rows: 1fr 142px 150px; gap: 16px; min-height: 0; }
-.h-photo { position: relative; border-radius: var(--r); overflow: hidden; background: var(--paper-2); display: block; width: 100%; }
+/* ---- photo: the whole right column */
+.h-photo { grid-column: 8 / 13; position: relative; border-radius: var(--r); overflow: hidden; background: var(--paper-2); display: block; width: 100%; min-height: 0; }
 .h-photo-stage { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
 .h-photo-cap {
   position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 18px 14px;
@@ -87,14 +86,6 @@
 }
 .h-photo-cap b { font-size: var(--fs-min); font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .h-photo-cap span { font-family: var(--serif); font-size: 20px; font-style: italic; }
-
-.h-chores { display: flex; flex-direction: column; gap: 8px; }
-.h-rings { display: flex; justify-content: space-between; }
-.h-ring { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.h-ring .num { position: absolute; top: 0; left: 0; width: 64px; height: 64px; display: grid; place-items: center; font-size: 20px; }
-.h-ring span { font-size: var(--fs-min); font-weight: 700; color: var(--ink-2); }
-.h-ring.is-done .ring-bg { fill: var(--c); }
-.h-ring.is-done .num { color: var(--c-ink); }
 
 .h-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .h-shop, .h-status { display: flex; flex-direction: column; gap: 4px; }

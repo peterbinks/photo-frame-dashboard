@@ -68,7 +68,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .rail-item.is-active { background: var(--ink); color: var(--paper); }
 .rail-item:active { background: var(--paper-2); }
 .rail-item.is-active:active { background: var(--ink-2); }
-.rail-clock { margin-top: auto; padding: 10px 0; text-align: center; line-height: 1; position: relative; overflow: hidden; }
+.rail-item--settings { margin-top: auto; height: 64px; } /* gear at the bottom, above the clock */
+.rail-clock { padding: 10px 0; text-align: center; line-height: 1; position: relative; overflow: hidden; }
 .rail-clock.is-holding { background: var(--paper-2); }
 .rail-clock b { display: block; font-size: 24px; font-weight: 800; font-stretch: 62%; font-variant-numeric: tabular-nums; }
 .rail-clock span { font-size: 12px; font-weight: 700; letter-spacing: .1em; color: var(--mute); }
@@ -271,27 +272,19 @@ button.card:active, .h-hero:active, .h-photo:active { transform: scale(.985); }
 .tk-btn--light.tk-btn--solid { background: #fff; color: var(--alert); }
 
 
-/* ---------------------------------------------------------------- demo drawer */
-.demo { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 90; pointer-events: none; }
-.demo.is-open { pointer-events: auto; background: rgba(0, 0, 0, .3); }
-.demo-panel {
-  position: absolute; right: 0; top: 0; bottom: 0; width: 460px; padding: 28px;
-  background: var(--ink); color: #fff; overflow: auto;
-  transform: translateX(100%);
+/* ---------------------------------------------------------------- not authorized + loading */
+.gate { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 95; display: grid; place-items: center; background: var(--paper); }
+.gate-card { max-width: 760px; padding: 48px; text-align: center; }
+.gate-card .label { justify-content: center; }
+.gate-card h1 { font-size: 88px; line-height: 1; margin: 10px 0 22px; }
+.gate-card p { font-size: 24px; line-height: 1.45; color: var(--ink-2); }
+.stage[data-booting]::after {
+  content: attr(data-booting);
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 94;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--paper); color: var(--mute);
+  font-family: var(--serif); font-style: italic; font-size: 48px;
 }
-.demo.is-open .demo-panel { transform: none; }
-.demo-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
-.demo-head h2 { font-size: 44px; line-height: 1; }
-.demo-x { width: var(--tap); height: var(--tap); border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .1); }
-.demo-sec { margin-bottom: 22px; }
-.demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-.demo-grid button {
-  min-height: var(--tap); border-radius: 14px; padding: 0 16px;
-  background: rgba(255, 255, 255, .1);
-  font-size: 18px; font-weight: 700;
-}
-.demo-grid button:active, .demo-grid button.is-on { background: #fff; color: var(--ink); }
-.demo-note { font-size: 16px; color: rgba(255, 255, 255, .6); }
 
 /* ---------------------------------------------------------------- night dashboard (tap on night clock) */
 .stage[data-mode="nightdash"] > .rail,

@@ -8,8 +8,10 @@
 .t-progress small { font-size: 32px; color: var(--mute); }
 .t-bar { width: 120px; height: 12px; border-radius: 6px; background: var(--paper-2); overflow: hidden; }
 .t-bar i { display: block; height: 100%; background: var(--ink); border-radius: 6px; }
+.t-head .fab { width: 52px; height: 52px; flex: none; }
+.ch.is-holding { box-shadow: inset 0 0 0 3px var(--alert); }
 
-.ch-lanes { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.ch-lanes { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(var(--lanes, 5), 1fr); gap: 12px; }
 .ch-lane { display: flex; flex-direction: column; min-height: 0; background: var(--card); border-radius: var(--r); overflow: hidden; position: relative; }
 .ch-head { display: flex; align-items: center; gap: 8px; padding: 14px 10px 14px 12px; background: var(--c); color: var(--c-ink); }
 .ch-head > div:nth-child(2) { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.1; }
@@ -56,8 +58,6 @@
 .ch.is-done .ch-emoji { box-shadow: none; }
 .ch-none { font-size: 22px; color: var(--mute); padding: 12px 6px; }
 .ch-alldone { font-size: 40px; text-align: center; padding: 6px 0 4px; color: var(--c); }
-.ch-lane:not([data-lane="otto"]) .ch-alldone { color: var(--c); }
-.ch-lane[data-lane="otto"] .ch-alldone { color: #C98A00; }
 
 .ch-week { padding: 10px 12px 14px; border-top: 1px solid var(--line); flex: none; }
 .ch-week .label { font-size: 12px; margin-bottom: 6px; }

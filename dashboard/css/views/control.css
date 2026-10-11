@@ -89,6 +89,18 @@
 .np-text b { font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .np-text > span:last-child { font-size: 16px; color: var(--mute); }
 .np-btn { width: var(--tap); height: var(--tap); border-radius: 50%; background: var(--ink); color: var(--paper); display: grid; place-items: center; }
+div.np-art { display: grid; place-items: center; color: var(--mute); flex: none; }
+.np-btn--ghost { width: 44px; height: 44px; background: var(--paper-2); color: var(--ink); flex: none; }
+.tile.is-na { opacity: .5; }
+.hc-none { font-size: 22px; color: var(--mute); padding: 16px 4px; }
+.hc-none--dark { color: rgba(255, 255, 255, .6); }
+
+/* not connected */
+.hc-connect { height: 100%; display: grid; place-items: center; }
+.hc-connect-card { max-width: 760px; padding: 44px 48px; border-radius: var(--r); background: var(--card); }
+.hc-connect-card h1 { font-size: 72px; line-height: 1; margin: 10px 0 18px; }
+.hc-connect-card p { font-size: 22px; line-height: 1.45; color: var(--ink-2); }
+.hc-connect-msg { white-space: pre-wrap; font: 18px/1.45 ui-monospace, Menlo, monospace; color: var(--ink-2); background: var(--paper); border-radius: 12px; padding: 14px 16px; margin: 0; }
 
 /* garage slide-to-confirm */
 .slide-confirm { position: relative; height: 88px; border-radius: 999px; background: var(--paper-2); overflow: hidden; touch-action: none; }

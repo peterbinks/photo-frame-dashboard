@@ -1,4 +1,8 @@
 /* Design tokens. Target: Android WebView 106 — no nesting, no color-mix(), no oklch(), no dvh. */
+/* Fonts are bundled and served from the Worker origin: the frame's old trust store can't reach every CDN. */
+@import '@fontsource-variable/archivo/wdth.css';
+@import '@fontsource/instrument-serif/400.css';
+@import '@fontsource/instrument-serif/400-italic.css';
 :root {
   /* paper + ink */
   --paper: #F2EEE6;
@@ -26,7 +30,7 @@
   --c-ink: #FFFFFF;
 
   /* type */
-  --sans: 'Archivo', 'Roboto Condensed', 'Roboto', system-ui, sans-serif;
+  --sans: 'Archivo Variable', 'Roboto Condensed', 'Roboto', system-ui, sans-serif;
   --serif: 'Instrument Serif', 'Noto Serif', Georgia, serif;
   --fs-clock: 150px;
   --fs-hero: 76px;

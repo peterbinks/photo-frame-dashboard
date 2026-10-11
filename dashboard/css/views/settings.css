@@ -1,0 +1,146 @@
+/* Settings */
+.st { height: 100%; display: grid; grid-template-columns: 270px 1fr; gap: 28px; }
+.st-nav { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+.st-head { margin-bottom: 14px; }
+.st-head h1 { font-size: 64px; line-height: .95; }
+.st-tab {
+  min-height: 60px; padding: 0 18px; border-radius: 16px;
+  display: flex; align-items: center; gap: 14px;
+  font-size: 20px; font-weight: 800; font-stretch: 80%; color: var(--ink-2);
+}
+.st-tab:active { background: var(--paper-2); }
+.st-tab.is-on { background: var(--ink); color: var(--paper); }
+.st-back { display: none; }
+
+.st-body { min-height: 0; overflow-y: auto; padding: 4px 4px 140px 0; }
+.st-sec-head { margin: 4px 0 16px; }
+.st-sec-head h2 { font-size: 52px; line-height: 1; }
+.st-sec-head .st-note { margin-top: 8px; }
+.st-note { font-size: 18px; line-height: 1.4; color: var(--ink-2); }
+.st-note--big { font-size: 20px; max-width: 780px; margin-top: 18px; }
+.st-empty { padding: 26px 22px; font-size: 30px; color: var(--mute); }
+
+.st-list { padding: 0; }
+.st-row {
+  display: flex; align-items: center; gap: 16px; width: 100%;
+  min-height: 84px; padding: 12px 20px; text-align: left;
+}
+.st-row + .st-row { border-top: 2px solid var(--paper); }
+.st-row--tap:active { background: var(--paper-2); }
+.st-main { flex: 1; min-width: 0; }
+.st-main b { display: block; font-size: 23px; font-weight: 800; font-stretch: 80%; line-height: 1.2; overflow-wrap: anywhere; }
+.st-main small { display: block; font-size: 17px; color: var(--ink-2); margin-top: 3px; overflow-wrap: anywhere; }
+.st-pre { white-space: pre-wrap; }
+.st-bad { color: var(--alert); font-weight: 700; }
+.st-ico { color: var(--ink-2); }
+.st-chev { color: var(--mute); }
+.st-swatch { flex: none; width: 30px; height: 30px; border-radius: 50%; }
+
+.st-dot { flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--line); }
+.st-dot--ok { background: var(--ok); }
+.st-dot--bad { background: var(--alert); }
+.st-dot--busy { background: var(--amber); }
+.st-refresh { width: 60px; height: 60px; }
+.st-refresh.is-busy .i, .st-spin { animation: st-spin 1s linear infinite; }
+.st-spin { display: inline-block; width: 18px; height: 18px; border-radius: 50%; border: 3px solid currentColor; border-right-color: transparent; }
+@keyframes st-spin { to { transform: rotate(360deg); } }
+
+.st-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 18px 0 14px; }
+.btn:disabled { opacity: .4; }
+.btn:disabled:active { transform: none; }
+.st-danger { background: var(--alert); border-color: var(--alert); color: #fff; }
+.st-danger-ghost { color: var(--alert); border-color: var(--alert); }
+.st-left { margin-right: auto; }
+
+/* Display form */
+.st-form { padding: 4px 24px; }
+.st-field { display: grid; grid-template-columns: 210px 1fr; gap: 16px; align-items: start; padding: 18px 0; }
+.st-field + .st-field { border-top: 2px solid var(--paper); }
+.st-field > .label { min-height: 56px; }
+.st-field-body .st-note { margin-top: 10px; }
+.st-steppers { display: flex; flex-wrap: wrap; gap: 28px; margin-top: 14px; }
+.st-stepper { display: flex; align-items: center; gap: 10px; }
+.st-stepper b { font-size: 30px; min-width: 112px; text-align: center; }
+.st-inline { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* Sheets with text inputs: pinned to the top so the on-screen keyboard can't cover the field */
+.sheet.sheet--form { top: 24px; width: 780px; max-height: 752px; transform: translate(-50%, 3%) scale(.97); }
+.sheet-layer.is-open .sheet.sheet--form { transform: translate(-50%, 0); }
+.st-sheet .sheet-h { padding-right: 60px; overflow-wrap: anywhere; }
+.st-sheet .label { margin: 22px 0 10px; }
+.st-input {
+  width: 100%; min-width: 0; height: 66px; padding: 0 18px;
+  border: 2px solid var(--line); border-radius: 14px; background: #fff; color: var(--ink);
+  font-size: 23px; font-weight: 600; outline: none;
+}
+.st-input:focus { border-color: var(--ink); }
+.st-input::placeholder { color: #AAA59B; font-weight: 500; }
+.st-input--link { font-size: 19px; }
+.st-input-row { display: flex; gap: 12px; align-items: center; }
+.st-input-row .st-input { flex: 1; }
+.st-input-row .btn { flex: none; }
+.st-err { margin: 14px 0 0; font-size: 19px; font-weight: 700; color: var(--alert); white-space: pre-wrap; overflow-wrap: anywhere; }
+.st-ok { margin: 14px 0 0; font-size: 20px; color: var(--ok); }
+.st-ok .i { display: inline-block; vertical-align: -4px; margin-right: 8px; }
+.st-ok b { color: var(--ink); }
+.st-link { display: flex; align-items: center; gap: 8px; font-size: 17px; color: var(--ink-2); overflow-wrap: anywhere; margin: -10px 0 6px; }
+.st-confirm b { color: var(--ink); }
+.st-who { flex-wrap: wrap; }
+.st-places { display: flex; flex-direction: column; margin-top: 12px; }
+.st-places .st-row { border-radius: 14px; }
+
+.st-palette { display: flex; flex-wrap: wrap; gap: 10px; }
+.st-color { width: 58px; height: 58px; border-radius: 50%; background: var(--c); }
+.st-color.is-on { box-shadow: 0 0 0 4px var(--paper), 0 0 0 7px var(--ink); }
+.st-color--none {
+  width: auto; padding: 0 20px; border-radius: 999px; background: var(--paper-2);
+  font-size: 16px; font-weight: 800; font-stretch: 75%; letter-spacing: .05em; text-transform: uppercase;
+}
+.st-color--none.is-on { background: var(--ink); color: var(--paper); box-shadow: none; }
+
+/* ---------------------------------------------------------------- phones: Settings as a page */
+.is-phone .stage[data-view="settings"] {
+  position: fixed; left: 0; top: 0; margin: 0;
+  width: 100%; height: 100%; display: block;
+}
+.is-phone .stage[data-view="settings"] > .rail { display: none; }
+.is-phone .stage[data-view="settings"] > .views { height: 100%; }
+.is-phone .view--settings { padding: 0; }
+.is-phone .st { display: flex; flex-direction: column; gap: 0; }
+.is-phone .st-nav { flex: none; flex-direction: row; gap: 6px; overflow-x: auto; padding: 10px 10px; border-bottom: 2px solid var(--ink); }
+.is-phone .st-head { display: none; }
+.is-phone .st-tab { flex: none; min-height: 48px; padding: 0 14px; gap: 8px; font-size: 17px; }
+.is-phone .st-tab .i { width: 22px; height: 22px; }
+.is-phone .st-back { display: flex; order: -1; }
+.is-phone .st-body { flex: 1; padding: 16px 12px 120px; }
+.is-phone .st-sec-head h2 { font-size: 40px; }
+.is-phone .st-note { font-size: 16px; }
+.is-phone .st-row { min-height: 68px; padding: 10px 14px; gap: 12px; }
+.is-phone .st-main b { font-size: 19px; }
+.is-phone .st-main small { font-size: 15px; }
+.is-phone .st-form { padding: 4px 14px; }
+.is-phone .st-field { grid-template-columns: 1fr; gap: 8px; }
+.is-phone .st-field > .label { min-height: 0; }
+.is-phone .st-stepper b { font-size: 24px; min-width: 84px; }
+.is-phone .stage[data-view="settings"] .seg button { min-height: 48px; padding: 0 14px; font-size: 15px; }
+.is-phone .stage[data-view="settings"] .chip { min-height: 48px; padding: 0 14px; font-size: 16px; }
+.is-phone .stage[data-view="settings"] .btn { min-height: 52px; padding: 0 18px; font-size: 16px; }
+.is-phone .stage[data-view="settings"] .icon-btn { width: 52px; height: 52px; }
+.is-phone .stage[data-view="settings"] .sheet {
+  left: 8px; top: 8px; width: auto; right: 8px; max-height: calc(100% - 16px);
+  transform: none; border-radius: 20px;
+}
+.is-phone .stage[data-view="settings"] .sheet-pad { padding: 22px 16px 18px; }
+.is-phone .stage[data-view="settings"] .sheet-h { font-size: 36px; padding-right: 56px; margin-bottom: 14px; }
+.is-phone .stage[data-view="settings"] .sheet-p { font-size: 17px; }
+.is-phone .stage[data-view="settings"] .sheet-actions { flex-wrap: wrap; }
+.is-phone .st-input { height: 56px; font-size: 18px; }
+.is-phone .st-input--link { font-size: 16px; }
+.is-phone .st-input-row { flex-direction: column; align-items: stretch; }
+.is-phone .st-input-row .st-input { flex: none; }
+.is-phone .st-color { width: 48px; height: 48px; }
+.is-phone .st-color--none { width: auto; }
+.is-phone .st-who .who-btn { min-width: 0; padding: 8px; font-size: 15px; }
+.is-phone .stage[data-view="settings"] .toasts { left: 0; padding: 0 8px; }
+.is-phone .stage[data-view="settings"] .toast { min-height: 56px; font-size: 16px; }
+.is-phone .stage[data-view="settings"] .banners { left: 8px; right: 8px; }

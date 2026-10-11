@@ -1,8 +1,20 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "home-dashboard",
+  "main": "src/worker.js",
   "compatibility_date": "2026-09-30",
   "assets": {
-    "directory": "./dist"
-  }
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // The Worker sees every request: it turns ?k=<key> on any page into a cookie, and guards /api/*.
+    "run_worker_first": true
+  },
+  "kv_namespaces": [
+    // `npm run setup` creates the namespace and fills in its id.
+    { "binding": "STATE", "id": "5772652d634646d1b76794c77ff0e0dd" }
+  ],
+  // TZ is set by `npm run setup` with `wrangler deploy --var …` so it stays out of this tracked file;
+  // keep it on plain redeploys. Everything else personal lives in the settings document in KV.
+  "keep_vars": true,
+  "observability": { "enabled": true }
 }

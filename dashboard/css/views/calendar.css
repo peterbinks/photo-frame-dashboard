@@ -14,7 +14,7 @@
 
 /* ---- time grid (Today + 3 day) */
 .cal-day { height: 100%; display: flex; flex-direction: column; position: relative; }
-.lanes-head { display: grid; grid-template-columns: 64px repeat(4, 1fr); flex: none; }
+.lanes-head { display: grid; grid-template-columns: 64px repeat(var(--people, 4), 1fr); flex: none; }
 .cal-3 .lanes-head { grid-template-columns: 64px repeat(3, 1fr); }
 .lane-head { display: flex; align-items: center; gap: 10px; padding: 0 12px 10px; border-bottom: 5px solid var(--c); margin: 0 4px; }
 .lane-head b { font-size: 22px; font-weight: 800; font-stretch: 80%; text-transform: uppercase; letter-spacing: .04em; }
@@ -27,7 +27,7 @@
 
 .allday { display: grid; grid-template-columns: 64px 1fr; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); flex: none; }
 .allday .gutter { font-size: 12px; padding-right: 6px; line-height: 1.1; }
-.allday-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px 8px; padding: 0 4px; }
+.allday-grid { display: grid; grid-template-columns: repeat(var(--people, 4), 1fr); gap: 6px 8px; padding: 0 4px; }
 .allday-grid--3 { grid-template-columns: repeat(3, 1fr); }
 .ad {
   min-height: 44px; padding: 0 14px; border-radius: 10px;
@@ -46,7 +46,7 @@
   position: absolute; left: -64px; width: 56px; top: -9px; text-align: right;
   font-size: var(--fs-min); font-weight: 700; font-stretch: 80%; color: var(--mute); white-space: nowrap;
 }
-.lanes { position: absolute; left: 64px; right: 0; top: 0; bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr); }
+.lanes { position: absolute; left: 64px; right: 0; top: 0; bottom: 0; display: grid; grid-template-columns: repeat(var(--people, 4), 1fr); }
 .lanes--3 { grid-template-columns: repeat(3, 1fr); }
 .lane { position: relative; border-left: 1px solid var(--line); }
 .lane.is-today { background: rgba(17, 17, 17, .03); }
