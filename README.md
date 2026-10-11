@@ -20,10 +20,33 @@ browser and kiosk app.
 | Root               | Added `/force_debuggable` to the boot ramdisk, then `adb root` | Ships with SuperSU `su`                          |
 | End result         | Lawnchair launcher, USB Wi-Fi dongle (onboard radio is dead)   | Firefox, launcher, WebView 106, custom kiosk app |
 
-[`dashboard/`](dashboard) is the family dashboard we run on the BIUFRAME (it uses mock data).
-It is a Vite web app deployed to Cloudflare Workers, plus `dashboard/kiosk/`: a small full-screen
-WebView Android app, built without Gradle, that shows it. Hold two fingers still for 1.5 s to
-exit to the launcher.
+[`dashboard/`](dashboard) is the family dashboard we run on the BIUFRAME. It is a Vite web app
+deployed to Cloudflare Workers, plus `dashboard/kiosk/`: a small full-screen WebView Android app,
+built without Gradle, that shows it. Hold two fingers still for 1.5 s to exit to the launcher.
+
+The dashboard shows real data: Google Calendar (each calendar's secret iCal address), iCloud
+Shared Album photos (proxied through the Worker so the frame's old trust store never talks to
+Apple's CDN), Open-Meteo weather, chores and a shopping list shared between devices (Workers KV),
+and Home Assistant control straight from the frame over your LAN. To make it yours:
+
+```sh
+cd dashboard
+npm install
+npm run setup   # first deploy: asks for your family, calendars, albums, Home Assistant + location
+```
+
+Setup logs in to Cloudflare if needed, creates the KV namespace, sets the access key, deploys,
+writes your answers into the dashboard's settings, and prints the link to open on the frame
+(`https://home-dashboard.<you>.workers.dev/?k=…`); if the frame is plugged in over USB it sends
+the link to the kiosk app with `adb`. After that, change things in **Settings** (the gear at the
+bottom of the left rail), on the frame or on a phone opened with the same link: family members
+and colours, calendars (paste the secret iCal address), iCloud albums, units, 12/24-hour clock,
+night-clock hours, when the slideshow starts, the weather location and Home Assistant. Settings →
+Sync shows when each source last updated and can force a refresh; screens pick up settings changes
+and newly deployed versions on their own. Re-run setup only to redeploy or change the time zone
+or access key; it starts from the live settings. Settings → Home Assistant → **Connect** once on the
+frame. `npm test` runs the Worker unit tests; `npm run dev` builds and serves locally with
+`wrangler dev` using `.dev.vars` (local dev keeps its own settings).
 
 Each is a record of **one unit**. Frames sold under the same name can have different boards
 and firmware. These are not universal flashing guides.
@@ -89,6 +112,10 @@ section unless the identity checks match exactly.
   available. The custom root-stage storage helper is not included; the
   [boot access notes](docs/allwinner-a33-boot-access.md) explain the verified
   patch and its limits. Do not run the Rockchip `apply` script on this board.
+- **AEEZO / astar-m86 (Allwinner sun8i, Android 6.0.1, firmware `20260410`):** same board family
+  as the PF1007L but ships with root ADB over USB (`1f3a:1002`). See
+  [aeezo-astar-m86.md](docs/aeezo-astar-m86.md) for identification, backup, the WebView swap, and
+  the macOS `adb` mDNS crash (`ADB_MDNS=0`).
 - **Something else:** work through the phase map. Expect the hidden-menu, root and backup routes
   to differ. Create `docs/<device>.md` and record everything.
 
