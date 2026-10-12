@@ -15,9 +15,11 @@ window.DATA = (function () {
     // Home Assistant (js/ha.js)
     rooms: [], devices: [], climate: null, media: null, cameras: [], scenes: [],
     weather: null,
+    // air quality (Open-Meteo US AQI) + pollen (pollen.com): { air, airError, pollen, pollenError }
+    air: null,
     photos: [],
     // per-source load state: loading | ok | empty | error (+ message)
-    status: { calendar: { state: 'loading' }, weather: { state: 'loading' }, photos: { state: 'loading' }, ha: { state: 'off' } },
+    status: { calendar: { state: 'loading' }, weather: { state: 'loading' }, air: { state: 'loading' }, photos: { state: 'loading' }, ha: { state: 'off' } },
     _gid: function () { return rid('g'); },
     _eid: function () { return rid('e'); },
     _cid: function () { return rid('c'); }
