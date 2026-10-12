@@ -9,64 +9,52 @@
       '<div class="h-date"><b>' + App.fmt.day(n) + '</b> ' + App.fmt.month(n) + ' ' + n.getDate() + '</div>';
   }
 
-  function weather() {
-    var w = App.weatherNow();
-    var hours = App.hourly(7);
-    var tmin = Math.min.apply(null, hours.map(function (h) { return h.t; }));
-    var tmax = Math.max.apply(null, hours.map(function (h) { return h.t; }));
-    return '<div class="h-wx-top">' +
-      '<span class="h-wx-icon">' + App.icon(w.cond, 60) + '</span>' +
-      '<span class="h-wx-temp num">' + w.temp + '°</span>' +
-      '<span class="h-wx-meta"><b>' + w.label + '</b><span>H ' + w.hi + '°  L ' + w.lo + '°</span></span>' +
-      airPill() +
-      '</div>' +
-      '<div class="h-wx-say"><b>' + w.summary + '.</b> ' + w.advice + '.</div>' +
-      '<div class="h-wx-hours">' + hours.map(function (h) {
-        var lift = tmax === tmin ? 0 : Math.round((h.t - tmin) / (tmax - tmin) * 8);
-        return '<div class="h-hr' + (h.p >= 50 ? ' is-wet' : '') + '"><span class="h-hr-l">' + h.label + '</span>' +
-          '<span class="h-hr-i" style="transform:translateY(' + -lift + 'px)">' + App.icon(h.c, 22) + '</span><b>' + h.t + '°</b></div>';
-      }).join('') + '</div>';
-  }
-
-  // ---- air quality + pollen: a compact pill in the weather block, details in a sheet
+  // ---- Outside: weather now + hourly on top, air quality and pollen side by side below
   var AQI_COLORS = ['#2E9E5B', '#E3B505', '#F28C28', '#D93B30', '#8F3F97', '#7E0023'];
   var POLLEN_COLORS = ['#2E9E5B', '#9BBF2A', '#E3B505', '#F28C28', '#D93B30'];
-  function dot(color) { return '<i class="h-air-dot" style="background:' + color + '"></i>'; }
-  function airPill() {
-    var A = D.air, a = A && A.air && A.air.now, p = A && A.pollen && A.pollen.today;
-    if (!a && !p) return '';
-    return '<button class="h-air" data-air>' +
-      (a ? '<span>' + dot(AQI_COLORS[a.level]) + '<b>AQI</b> <span class="num">' + a.aqi + '</span></span>' : '') +
-      (p ? '<span>' + dot(POLLEN_COLORS[p.level]) + '<b>Pollen</b> <span class="num">' + p.index.toFixed(1) + '</span></span>' : '') +
-      '</button>';
+  function outside() {
+    var w = App.weatherNow(), hours = App.hourly(6);
+    var tmin = Math.min.apply(null, hours.map(function (h) { return h.t; }));
+    var tmax = Math.max.apply(null, hours.map(function (h) { return h.t; }));
+    return '<div class="o-wx">' +
+      '<div class="o-now">' +
+      '  <span class="o-icon">' + App.icon(w.cond, 48) + '</span>' +
+      '  <span class="o-temp num">' + w.temp + '°</span>' +
+      '  <span class="o-meta"><b>' + w.label + '</b><span class="num">H ' + w.hi + '°  L ' + w.lo + '°</span><em>' + w.summary + '. ' + w.advice + '.</em></span>' +
+      '</div>' +
+      '<div class="o-hours">' + hours.map(function (h) {
+        var lift = tmax === tmin ? 0 : Math.round((h.t - tmin) / (tmax - tmin) * 6);
+        return '<div class="o-hr' + (h.p >= 50 ? ' is-wet' : '') + '"><span class="o-hr-l">' + h.label + '</span>' +
+          '<span class="o-hr-i" style="transform:translateY(' + -lift + 'px)">' + App.icon(h.c, 22) + '</span><b class="num">' + h.t + '°</b></div>';
+      }).join('') + '</div>' +
+      '</div>' +
+      '<div class="o-air">' + airPart() + pollenPart() + '</div>';
   }
-  function airSheet() {
-    var A = D.air || {}, air = A.air, pol = A.pollen, esc = App.esc;
-    var aCard = air
-      ? '<div class="air-big"><span class="num" style="color:' + AQI_COLORS[air.now.level] + '">' + air.now.aqi + '</span><span><b>' + esc(air.now.label) + '</b>' +
-        (air.now.main ? '<small>Mostly ' + esc(air.now.main.charAt(0).toLowerCase() + air.now.main.slice(1)) + '</small>' : '') + '</span></div>' +
-        '<div class="air-rows">' + [['Today’s peak', air.today], ['Tomorrow’s peak', air.tomorrow]].filter(function (r) { return r[1]; }).map(function (r) {
-          return '<div>' + dot(AQI_COLORS[r[1].level]) + '<span>' + r[0] + '</span><b class="num">' + r[1].aqi + '</b><small>' + esc(r[1].label) + '</small></div>';
-        }).join('') + '</div>'
-      : '<p class="air-err">' + esc(A.airError || 'Air quality unavailable') + '</p>';
-    var pCard = pol
-      ? '<div class="air-big"><span class="num" style="color:' + POLLEN_COLORS[pol.today.level] + '">' + pol.today.index.toFixed(1) + '</span><span><b>' + esc(pol.today.label) + '</b>' +
-        (pol.today.triggers.length ? '<small>' + esc(pol.today.triggers.map(function (t) { return t.name; }).join(', ')) + '</small>' : '') + '</span></div>' +
-        '<div class="air-days">' + pol.days.map(function (d, i) {
-          var dt = new Date(d.date + 'T12:00:00');
-          return '<div><span class="air-bar"><i style="height:' + Math.max(6, Math.round(d.index / 12 * 100)) + '%;background:' + POLLEN_COLORS[d.level] + '"></i></span>' +
-            '<b class="num">' + d.index.toFixed(1) + '</b><small>' + (i === 0 ? 'Today' : App.fmt.dayShort(dt)) + '</small></div>';
-        }).join('') + '</div>' +
-        '<div class="air-rows">' + [['Asthma', pol.asthma && pol.asthma.today], ['Cold & flu', pol.cold && pol.cold.today]].filter(function (r) { return r[1]; }).map(function (r) {
-          return '<div>' + dot(POLLEN_COLORS[r[1].level]) + '<span>' + r[0] + '</span><b class="num">' + r[1].index.toFixed(1) + '</b><small>' + esc(r[1].label) + '</small></div>';
-        }).join('') + '</div>'
-      : '<p class="air-err">' + esc(A.pollenError || 'Pollen forecast unavailable') + '</p>';
-    App.sheet('<div class="sheet-pad air-sheet"><div class="label">Outside today</div>' +
-      '<h2 class="display sheet-h">' + (air ? esc(air.now.label) + ' air' : 'Air') + (pol ? '<i>, ' + esc(pol.today.label.toLowerCase()) + ' pollen</i>' : '') + '</h2>' +
-      '<div class="air-cols"><section class="card"><div class="label">Air quality · US AQI 0–500</div>' + aCard + '</section>' +
-      '<section class="card"><div class="label">Pollen · 0–12</div>' + pCard + '</section></div>' +
-      '<p class="air-src">Air quality: Open-Meteo forecast model. Pollen, asthma and cold & flu: pollen.com' + (pol ? ' for ' + esc(pol.zip) : '') + '.</p>' +
-      '<div class="sheet-actions"><button class="btn btn--solid" data-close>Done</button></div></div>', { cls: 'sheet--wide' });
+  function airPart() {
+    var A = D.air, a = A && A.air;
+    if (!a) return '<div class="o-part"><span class="o-txt"><span class="label">Air quality</span><small class="o-none">' + App.esc((A && A.airError) || (D.status.air.state === 'loading' ? 'Loading…' : 'Unavailable')) + '</small></span></div>';
+    var peak = a.today && a.today.aqi > a.now.aqi ? 'Peak ' + a.today.aqi + ' today' : a.tomorrow ? 'Tomorrow ' + a.tomorrow.aqi : '';
+    return '<div class="o-part">' +
+      '<span class="o-big num" style="color:' + AQI_COLORS[a.now.level] + '">' + a.now.aqi + '</span>' +
+      '<span class="o-txt"><span class="label">Air quality</span><b>' + App.esc(a.now.label) + '</b>' +
+      '<small>' + [a.now.main ? App.esc(a.now.main.replace(/^.*\((.*)\)$/, '$1')) : '', peak].filter(Boolean).join(' · ') + '</small></span>' +
+      '</div>';
+  }
+  function pollenPart() {
+    var A = D.air, p = A && A.pollen;
+    if (!p) return '<div class="o-part"><span class="o-txt"><span class="label">Pollen</span><small class="o-none">' + App.esc((A && A.pollenError) || (D.status.air.state === 'loading' ? 'Loading…' : 'Unavailable')) + '</small></span></div>';
+    var extra = [['Asthma', p.asthma && p.asthma.today], ['Cold', p.cold && p.cold.today]].filter(function (x) { return x[1]; })
+      .map(function (x) { return x[0] + ' ' + x[1].index.toFixed(1); }).join(' · ');
+    return '<div class="o-part">' +
+      '<span class="o-big num" style="color:' + POLLEN_COLORS[p.today.level] + '">' + p.today.index.toFixed(1) + '</span>' +
+      '<span class="o-txt"><span class="label">Pollen</span><b>' + App.esc(p.today.label) + '</b>' +
+      '<small>' + App.esc(p.today.triggers.map(function (t) { return t.name; }).join(', ') || 'No main allergens') + '</small>' +
+      (extra ? '<small>' + extra + '</small>' : '') + '</span>' +
+      (p.days.length > 1 ? '<span class="o-days">' + p.days.map(function (d, i) {
+        return '<span><i class="o-bar"><i style="height:' + Math.max(10, Math.round(d.index / 12 * 100)) + '%;background:' + POLLEN_COLORS[d.level] + '"></i></i>' +
+          '<small>' + (i === 0 ? 'Now' : App.fmt.dayShort(new Date(d.date + 'T12:00:00')).slice(0, 2)) + '</small></span>';
+      }).join('') + '</span>' : '') +
+      '</div>';
   }
 
   // Presence comes from Home Assistant person.* entities; unknown (null) shows just the name.
@@ -87,12 +75,12 @@
         return '<div class="h-hero h-hero--empty" data-go="calendar">' +
           '<div class="label label--light">Calendar</div>' +
           '<div class="h-hero-title display">' + (cal.state === 'loading' ? 'Loading the calendar…' : App.esc(cal.message || 'Calendar unavailable') + '.') +
-          (cal.state === 'empty' ? '<br><i>Add one in Settings.</i>' : '') + '</div></div>';
+          (cal.state === 'empty' ? ' <i>Add one in Settings.</i>' : '') + '</div></div>';
       }
       var tomorrow = App.timedOn(App.addDays(now, 1))[0];
       return '<div class="h-hero h-hero--empty" data-go="calendar">' +
         '<div class="label label--light">Rest of today</div>' +
-        '<div class="h-hero-title display">Nothing else scheduled.<br><i>Enjoy the quiet.</i></div>' +
+        '<div class="h-hero-title display">Nothing else scheduled. <i>Enjoy the quiet.</i></div>' +
         (tomorrow ? '<div class="h-hero-meta">Tomorrow starts with <b>' + App.esc(tomorrow.title) + '</b> at ' + App.fmt.time(tomorrow.start) + '</div>' : '') +
         '</div>';
     }
@@ -115,8 +103,7 @@
       '  <div class="label label--on">Next up · ' + App.esc(whoText) + '</div>' +
       '  <div class="h-hero-title display">' + App.esc(e.title) + '</div>' +
       '  <div class="h-hero-meta">' + App.fmt.range(e.start, e.end) + (e.loc ? ' · ' + App.esc(e.loc) : '') + '</div>' +
-      '  <div class="h-hero-foot">' + (e.people.length > 1 ? App.dots(e.people, 22) : '') + leavePill + '</div>' +
-      '</div>' + big + '</button>';
+      '</div>' + leavePill + big + '</button>';
   }
 
   function lanes() {
@@ -146,36 +133,32 @@
   }
   App.ring = ring;
 
+  // Shopping and Home as one-line strips under the lanes
   function shopping() {
     var open = D.groceries.filter(function (g) { return !g.done; });
-    var recent = open.slice(-3).reverse();
-    return '<div class="label">Shopping</div>' +
-      '<div class="h-stat"><span class="num">' + open.length + '</span><small>items to get</small></div>' +
-      '<ul class="h-recent">' + recent.map(function (g) {
-        return '<li><i></i>' + App.esc(g.name) + '</li>';
-      }).join('') + '</ul>';
+    var recent = open.slice(-3).reverse().map(function (g) { return App.esc(g.name); }).join(', ');
+    return App.icon('cart', 24) + '<b class="num">' + open.length + '</b><span>' + (open.length === 1 ? 'item' : 'items') + ' to get' +
+      (recent ? '<em> · ' + recent + '</em>' : '') + '</span>';
   }
 
   function status() {
     if (D.status.ha.state !== 'ok') {
-      return '<div class="label">Home</div>' +
-        '<div class="h-st-row">' + App.icon('sliders', 24) + '<span>' + (D.status.ha.state === 'connecting' ? 'Connecting…' : 'Home Assistant not connected') + '</span></div>';
+      return App.icon('sliders', 24) + '<span>' + (D.status.ha.state === 'connecting' ? 'Connecting to Home Assistant…' : 'Home Assistant not connected') + '</span>';
     }
     var lights = D.devices.filter(function (d) { return d.type === 'light' && d.on; }).length;
     var unlocked = D.devices.filter(function (d) { return d.type === 'lock' && !d.locked; });
     var garage = D.devices.filter(function (d) { return d.type === 'garage' && d.state !== 'closed'; })[0];
     var secure = !unlocked.length && !garage;
     var secText = secure ? 'All locked' : (garage ? garage.name + ' ' + garage.state : unlocked[0].name + ' unlocked');
-    return '<div class="label">Home</div>' +
-      '<div class="h-st-row">' + App.icon('bulb', 24) + '<b class="num">' + lights + '</b><span>lights on</span></div>' +
-      '<div class="h-st-row' + (secure ? '' : ' is-warn') + '">' + App.icon(secure ? 'lock' : 'unlock', 24) + '<span>' + App.esc(secText) + '</span></div>' +
-      (D.climate && D.climate.current != null ? '<div class="h-st-row">' + App.icon('thermo', 24) + '<b class="num">' + D.climate.current + '°</b><span>inside</span></div>' : '');
+    return App.icon('bulb', 24) + '<b class="num">' + lights + '</b><span>on</span>' +
+      '<span class="h-st-sep' + (secure ? '' : ' is-warn') + '">' + App.icon(secure ? 'lock' : 'unlock', 22) + App.esc(secText) + '</span>' +
+      (D.climate && D.climate.current != null ? '<span class="h-st-sep">' + App.icon('thermo', 22) + D.climate.current + '°</span>' : '');
   }
 
   function paint() {
     var el = V.el;
     el.querySelector('.h-clock').innerHTML = clock();
-    el.querySelector('.h-weather').innerHTML = weather();
+    el.querySelector('.h-outside').innerHTML = outside();
     el.querySelector('.h-presence').innerHTML = presence();
     el.querySelector('.h-hero-slot').innerHTML = hero();
     el.querySelector('.h-lanes').innerHTML = lanes();
@@ -194,9 +177,8 @@
       if (!el.firstChild) {
         el.innerHTML = '<div class="home">' +
           '<div class="h-clock" data-go="calendar"></div>' +
-          '<div class="h-weather"></div>' +
           '<div class="h-presence"></div>' +
-          '<div class="h-main"><div class="h-hero-slot"></div><div class="h-lanes"></div>' +
+          '<div class="h-main"><div class="h-hero-slot"></div><div class="h-outside card"></div><div class="h-lanes"></div>' +
           '  <div class="h-duo"><button class="h-shop card" data-go="shopping"></button><button class="h-status card" data-go="control"></button></div>' +
           '</div>' +
           '<button class="h-photo" data-go="photos"><div class="h-photo-stage"></div><div class="h-photo-cap"></div></button>' +
@@ -204,7 +186,6 @@
         el.addEventListener('click', function (e) {
           var ev = e.target.closest('[data-ev]');
           if (ev) { App.eventSheet(App.findEvent(ev.dataset.ev)); return; }
-          if (e.target.closest('[data-air]')) { airSheet(); return; }
           var g = e.target.closest('[data-go]');
           if (g) App.go(g.dataset.go);
         });
@@ -216,12 +197,12 @@
     resume: function () { V.slides.start(); },
     hide: function () { if (V.slides) V.slides.stop(); }
   });
-  // Every minute: just the clock and next-up countdown (cheap, even while hidden). Weather on the hour.
+  // Every minute: just the clock and next-up countdown (cheap, even while hidden). Outside on the hour.
   App.on('minute', function (n) {
     if (!V.el || !V.el.firstChild) return;
     V.el.querySelector('.h-clock').innerHTML = clock();
     V.el.querySelector('.h-hero-slot').innerHTML = hero();
-    if (n.getMinutes() === 0) { V.el.querySelector('.h-weather').innerHTML = weather(); V.el.querySelector('.h-lanes').innerHTML = lanes(); }
+    if (n.getMinutes() === 0) { V.el.querySelector('.h-outside').innerHTML = outside(); V.el.querySelector('.h-lanes').innerHTML = lanes(); }
   });
   App.on('data', function () { if (App.current === 'home') paint(); });
   // Home Assistant updates (devices, presence) repaint only the parts that use them.
