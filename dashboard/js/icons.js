@@ -1,58 +1,35 @@
-// Minimal stroke icon set (24×24 grid). Usage: App.icon('home', 28)
-window.ICONS = {
-  home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
-  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
-  tasks: '<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M7.5 12l3 3 6-6"/>',
-  cart: '<path d="M3 4h2.2l2.3 11h10.8L21 8H6.5"/><circle cx="10" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/>',
-  photo: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/>',
-  sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
-  bulb: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/>',
-  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
-  unlock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.6-1.7"/>',
-  garage: '<path d="M3 21V9l9-5 9 5v12"/><path d="M7 21v-9h10v9M7 15h10M7 18h10"/>',
-  blinds: '<path d="M3 4h18M5 4v13M19 4v13M5 8h14M5 12h14M5 16h14M12 17v4"/>',
-  thermo: '<path d="M14 14V5a2 2 0 0 0-4 0v9a4 4 0 1 0 4 0z"/>',
-  camera: '<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/>',
-  music: '<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
-  plus: '<path d="M12 5v14M5 12h14"/>',
-  minus: '<path d="M5 12h14"/>',
-  left: '<path d="M15 5l-7 7 7 7"/>',
-  right: '<path d="M9 5l7 7-7 7"/>',
-  x: '<path d="M6 6l12 12M18 6L6 18"/>',
-  check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
-  heart: '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>',
-  star: '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/>',
-  pin: '<path d="M12 21s-6.5-5.8-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 15.2 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/>',
-  car: '<path d="M5 17v2M19 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="14" r=".8"/><circle cx="16.5" cy="14" r=".8"/>',
-  drop: '<path d="M12 3s6.5 7.2 6.5 11.5a6.5 6.5 0 0 1-13 0C5.5 10.2 12 3 12 3z"/>',
-  box: '<path d="M3 7.5l9-4.5 9 4.5v9l-9 4.5-9-4.5z"/><path d="M3 7.5l9 4.5 9-4.5M12 12v9"/>',
-  door: '<path d="M6 21V3h12v18"/><circle cx="15" cy="12" r=".9"/><path d="M3 21h18"/>',
-  bell: '<path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
-  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
-  play: '<path d="M7 4.5v15l13-7.5z" fill="currentColor"/>',
-  pause: '<path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z" fill="currentColor"/>',
-  undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
-  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-  person: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
-  bolt: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
-  film: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/>',
-  utensils: '<path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17 21V3c-2.5 1.5-3.5 4-3.5 8h3.5"/>',
-  sunrise: '<path d="M3 18h18M6 14a6 6 0 0 1 12 0M12 4v3M4.9 8.9l1.4 1.4M19.1 8.9l-1.4 1.4"/><path d="M8 21h8"/>',
-  away: '<path d="M14 4h5v16h-5"/><path d="M4 12h11M11 8l4 4-4 4"/>',
-  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
-  refresh: '<path d="M20 11a8 8 0 0 0-14.5-4.5L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.5 4.5L20 16"/><path d="M20 21v-5h-5"/>',
-  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
-  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
-  link: '<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>',
+// Icons: Lucide (https://lucide.dev, ISC licence), imported one by one so Vite bundles only these.
+// Usage: App.icon('home', 28). The names below are the dashboard's own; each maps to a Lucide icon.
+import {
+  House, Calendar, SquareCheckBig, ShoppingCart, Image, SlidersHorizontal, Lightbulb, Lock, LockOpen,
+  Warehouse, Blinds, Thermometer, Cctv, Music, Plus, Minus, ChevronLeft, ChevronRight, X, Check, Heart,
+  Star, MapPin, Car, Droplet, Package, DoorClosed, Bell, Mic, Play, Pause, Undo2, Clock, User, Zap, Film,
+  Utensils, Sunrise, LogOut, Settings, RefreshCw, Trash2, Pencil, Link, Sun, Cloud, CloudRain, CloudSun,
+  Moon, CloudSnow, CloudLightning, Fan, Power,
+} from 'lucide';
+
+const MAP = {
+  home: House, calendar: Calendar, tasks: SquareCheckBig, cart: ShoppingCart, photo: Image,
+  sliders: SlidersHorizontal, bulb: Lightbulb, lock: Lock, unlock: LockOpen, garage: Warehouse,
+  blinds: Blinds, thermo: Thermometer, camera: Cctv, music: Music, plus: Plus, minus: Minus,
+  left: ChevronLeft, right: ChevronRight, x: X, check: Check, heart: Heart, star: Star, pin: MapPin,
+  car: Car, drop: Droplet, box: Package, door: DoorClosed, bell: Bell, mic: Mic, play: Play, pause: Pause,
+  undo: Undo2, clock: Clock, person: User, bolt: Zap, film: Film, utensils: Utensils, sunrise: Sunrise,
+  away: LogOut, gear: Settings, refresh: RefreshCw, trash: Trash2, edit: Pencil, link: Link,
   // weather
-  sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/>',
-  cloud: '<path d="M7 18.5h10.2a4.3 4.3 0 0 0 .4-8.6A6.2 6.2 0 0 0 5.8 11.6 3.5 3.5 0 0 0 7 18.5z"/>',
-  rain: '<path d="M7 15h10.2a4.3 4.3 0 0 0 .4-8.6A6.2 6.2 0 0 0 5.8 8.1 3.5 3.5 0 0 0 7 15z"/><path d="M8.5 18l-1 3M12.5 18l-1 3M16.5 18l-1 3"/>',
-  partly: '<path d="M8.5 2.5v1.3M3.4 4.6l.9.9M1.8 9.6h1.3M13.6 4.6l-.9.9"/><path d="M5.3 12.3a4 4 0 0 1 6.9-4.4"/><path d="M9.5 20h8.3a3.6 3.6 0 0 0 .3-7.2 5.2 5.2 0 0 0-9.9 1.4A2.9 2.9 0 0 0 9.5 20z"/>',
-  moon: '<path d="M20 14.5A8.2 8.2 0 0 1 9.5 4 8.2 8.2 0 1 0 20 14.5z"/>',
-  snow: '<path d="M7 15h10.2a4.3 4.3 0 0 0 .4-8.6A6.2 6.2 0 0 0 5.8 8.1 3.5 3.5 0 0 0 7 15z"/><path d="M8 18.5h.01M12 18.5h.01M16 18.5h.01M10 21h.01M14 21h.01" stroke-width="2.6"/>',
-  storm: '<path d="M7 15h10.2a4.3 4.3 0 0 0 .4-8.6A6.2 6.2 0 0 0 5.8 8.1 3.5 3.5 0 0 0 7 15z"/><path d="M12.5 15l-2 3.5h3l-2 3.5"/>',
+  sun: Sun, cloud: Cloud, rain: CloudRain, partly: CloudSun, moon: Moon, snow: CloudSnow, storm: CloudLightning,
   // devices
-  fan: '<circle cx="12" cy="12" r="1.8"/><path d="M12 10.2C10 7 10.5 3.5 13 3.5c2 0 2 3.5-1 6.7M13.8 12c3.2-2 6.7-1.5 6.7 1 0 2-3.5 2-6.7-1M12 13.8c2 3.2 1.5 6.7-1 6.7-2 0-2-3.5 1-6.7M10.2 12C7 14 3.5 13.5 3.5 11c0-2 3.5-2 6.7 1"/>',
-  power: '<path d="M12 3v8"/><path d="M6.6 6.6a7.5 7.5 0 1 0 10.8 0"/>'
+  fan: Fan, power: Power,
 };
+// Media controls read better solid.
+const FILLED = { play: true, pause: true };
+
+function attrs(a) {
+  return Object.keys(a).map((k) => ' ' + k + '="' + String(a[k]).replace(/"/g, '&quot;') + '"').join('');
+}
+// Lucide icon node ([[tag, attrs], ...]) → SVG body markup, built once at startup.
+window.ICONS = {};
+for (const name of Object.keys(MAP)) {
+  const body = MAP[name].map(([tag, a]) => '<' + tag + attrs(a) + '/>').join('');
+  window.ICONS[name] = FILLED[name] ? '<g fill="currentColor">' + body + '</g>' : body;
+}
