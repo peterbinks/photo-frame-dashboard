@@ -1,4 +1,5 @@
 // Home / Today: the glanceable overview. Never scrolls.
+// Top row: clock | Shopping + Home squares. Below: Next up and Outside (left) | photo (right).
 (function () {
   'use strict';
   var D = window.DATA, V = {};
@@ -13,58 +14,53 @@
   var AQI_COLORS = ['#2E9E5B', '#E3B505', '#F28C28', '#D93B30', '#8F3F97', '#7E0023'];
   var POLLEN_COLORS = ['#2E9E5B', '#9BBF2A', '#E3B505', '#F28C28', '#D93B30'];
   function outside() {
-    var w = App.weatherNow(), hours = App.hourly(6);
+    var w = App.weatherNow(), hours = App.hourly(8);
     var tmin = Math.min.apply(null, hours.map(function (h) { return h.t; }));
     var tmax = Math.max.apply(null, hours.map(function (h) { return h.t; }));
-    return '<div class="o-wx">' +
-      '<div class="o-now">' +
-      '  <span class="o-icon">' + App.icon(w.cond, 48) + '</span>' +
+    return '<div class="o-now">' +
+      '  <span class="o-icon">' + App.icon(w.cond, 72) + '</span>' +
       '  <span class="o-temp num">' + w.temp + '°</span>' +
       '  <span class="o-meta"><b>' + w.label + '</b><span class="num">H ' + w.hi + '°  L ' + w.lo + '°</span><em>' + w.summary + '. ' + w.advice + '.</em></span>' +
       '</div>' +
       '<div class="o-hours">' + hours.map(function (h) {
-        var lift = tmax === tmin ? 0 : Math.round((h.t - tmin) / (tmax - tmin) * 6);
+        var lift = tmax === tmin ? 0 : Math.round((h.t - tmin) / (tmax - tmin) * 8);
         return '<div class="o-hr' + (h.p >= 50 ? ' is-wet' : '') + '"><span class="o-hr-l">' + h.label + '</span>' +
-          '<span class="o-hr-i" style="transform:translateY(' + -lift + 'px)">' + App.icon(h.c, 22) + '</span><b class="num">' + h.t + '°</b></div>';
+          '<span class="o-hr-i" style="transform:translateY(' + -lift + 'px)">' + App.icon(h.c, 28) + '</span><b class="num">' + h.t + '°</b></div>';
       }).join('') + '</div>' +
-      '</div>' +
       '<div class="o-air">' + airPart() + pollenPart() + '</div>';
+  }
+  function unavailable(label, err) {
+    var msg = err || (D.status.air.state === 'loading' ? 'Loading…' : 'Unavailable');
+    return '<div class="o-part"><span class="o-txt"><span class="label">' + label + '</span><small class="o-none">' + App.esc(msg) + '</small></span></div>';
   }
   function airPart() {
     var A = D.air, a = A && A.air;
-    if (!a) return '<div class="o-part"><span class="o-txt"><span class="label">Air quality</span><small class="o-none">' + App.esc((A && A.airError) || (D.status.air.state === 'loading' ? 'Loading…' : 'Unavailable')) + '</small></span></div>';
-    var peak = a.today && a.today.aqi > a.now.aqi ? 'Peak ' + a.today.aqi + ' today' : a.tomorrow ? 'Tomorrow ' + a.tomorrow.aqi : '';
+    if (!a) return unavailable('Air quality', A && A.airError);
+    var lines = [];
+    if (a.now.main) lines.push('Mostly ' + App.esc(a.now.main.replace(/^.*\((.*)\)$/, '$1')));
+    if (a.today && a.today.aqi > a.now.aqi) lines.push('Peak ' + a.today.aqi + ' today');
+    if (a.tomorrow) lines.push('Tomorrow ' + a.tomorrow.aqi);
     return '<div class="o-part">' +
       '<span class="o-big num" style="color:' + AQI_COLORS[a.now.level] + '">' + a.now.aqi + '</span>' +
       '<span class="o-txt"><span class="label">Air quality</span><b>' + App.esc(a.now.label) + '</b>' +
-      '<small>' + [a.now.main ? App.esc(a.now.main.replace(/^.*\((.*)\)$/, '$1')) : '', peak].filter(Boolean).join(' · ') + '</small></span>' +
+      lines.map(function (l) { return '<small>' + l + '</small>'; }).join('') + '</span>' +
       '</div>';
   }
   function pollenPart() {
     var A = D.air, p = A && A.pollen;
-    if (!p) return '<div class="o-part"><span class="o-txt"><span class="label">Pollen</span><small class="o-none">' + App.esc((A && A.pollenError) || (D.status.air.state === 'loading' ? 'Loading…' : 'Unavailable')) + '</small></span></div>';
-    var extra = [['Asthma', p.asthma && p.asthma.today], ['Cold', p.cold && p.cold.today]].filter(function (x) { return x[1]; })
-      .map(function (x) { return x[0] + ' ' + x[1].index.toFixed(1); }).join(' · ');
+    if (!p) return unavailable('Pollen', A && A.pollenError);
+    var extra = [['Asthma', p.asthma && p.asthma.today], ['Cold & flu', p.cold && p.cold.today]].filter(function (x) { return x[1]; })
+      .map(function (x) { return '<small>' + x[0] + ' ' + x[1].index.toFixed(1) + '</small>'; }).join('');
     return '<div class="o-part">' +
       '<span class="o-big num" style="color:' + POLLEN_COLORS[p.today.level] + '">' + p.today.index.toFixed(1) + '</span>' +
       '<span class="o-txt"><span class="label">Pollen</span><b>' + App.esc(p.today.label) + '</b>' +
       '<small>' + App.esc(p.today.triggers.map(function (t) { return t.name; }).join(', ') || 'No main allergens') + '</small>' +
-      (extra ? '<small>' + extra + '</small>' : '') + '</span>' +
+      extra + '</span>' +
       (p.days.length > 1 ? '<span class="o-days">' + p.days.map(function (d, i) {
         return '<span><i class="o-bar"><i style="height:' + Math.max(10, Math.round(d.index / 12 * 100)) + '%;background:' + POLLEN_COLORS[d.level] + '"></i></i>' +
-          '<small>' + (i === 0 ? 'Now' : App.fmt.dayShort(new Date(d.date + 'T12:00:00')).slice(0, 2)) + '</small></span>';
+          '<small>' + App.fmt.dayShort(new Date(d.date + 'T12:00:00')).slice(0, 2) + '</small></span>';
       }).join('') + '</span>' : '') +
       '</div>';
-  }
-
-  // Presence comes from Home Assistant person.* entities; unknown (null) shows just the name.
-  function presence() {
-    return D.people.map(function (p) {
-      var sub = p.home == null ? '' : p.home ? 'Home' : (p.eta ? '<b>ETA ' + p.eta + ' min</b>' : App.esc(p.status || 'Away'));
-      return '<div class="h-who' + (p.home ? ' is-home' : '') + '" style="' + App.pstyle(p) + '">' +
-        App.avatar(p, 36, p.home === false ? 'avatar--away' : '') +
-        '<span><b>' + App.esc(p.name) + '</b><small>' + sub + '</small></span></div>';
-    }).join('');
   }
 
   function hero() {
@@ -106,25 +102,7 @@
       '</div>' + leavePill + big + '</button>';
   }
 
-  function lanes() {
-    var now = App.now();
-    if (!D.people.length) return '<div class="h-free display"><i>Add your family</i> in Settings</div>';
-    return D.people.map(function (p) {
-      var list = App.timedOn(now, p.id).filter(function (e) { return e.end > now; });
-      var shown = list.slice(0, 3), more = list.length - shown.length;
-      return '<div class="h-lane" style="' + App.pstyle(p) + '">' +
-        '<div class="h-lane-head">' + App.avatar(p, 30) + '<b>' + p.name + '</b></div>' +
-        (list.length ? shown.map(function (e) {
-          var cur = e.start <= now;
-          return '<button class="h-ev' + (cur ? ' is-now' : '') + '" data-ev="' + e.id + '">' +
-            '<span class="h-ev-t">' + (cur ? 'Now' : App.fmt.time(e.start, false)) + '</span>' +
-            '<span class="h-ev-n">' + App.esc(e.title) + '</span></button>';
-        }).join('') : '<div class="h-free display"><i>Free</i> the rest of the day</div>') +
-        (more > 0 ? '<button class="h-more" data-go="calendar">+' + more + ' more</button>' : '') +
-        '</div>';
-    }).join('');
-  }
-
+  // Progress ring (also used by the Chores view).
   function ring(done, total, size) {
     var r = size / 2 - 5, c = 2 * Math.PI * r, f = total ? done / total : 0;
     return '<svg class="ring" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' +
@@ -133,37 +111,37 @@
   }
   App.ring = ring;
 
-  // Shopping and Home as one-line strips under the lanes
+  // ---- Shopping + Home squares (top right)
   function shopping() {
     var open = D.groceries.filter(function (g) { return !g.done; });
-    var recent = open.slice(-3).reverse().map(function (g) { return App.esc(g.name); }).join(', ');
-    return App.icon('cart', 24) + '<b class="num">' + open.length + '</b><span>' + (open.length === 1 ? 'item' : 'items') + ' to get' +
-      (recent ? '<em> · ' + recent + '</em>' : '') + '</span>';
+    return '<div class="label">' + App.icon('cart', 18) + 'Shopping</div>' +
+      '<div class="h-sq-stat"><b class="num">' + open.length + '</b><span>' + (open.length === 1 ? 'item' : 'items') + ' to get</span></div>' +
+      '<ul class="h-sq-list">' + open.slice(-3).reverse().map(function (g) { return '<li>' + App.esc(g.name) + '</li>'; }).join('') + '</ul>';
   }
 
   function status() {
+    var head = '<div class="label">' + App.icon('sliders', 18) + 'Home</div>';
     if (D.status.ha.state !== 'ok') {
-      return App.icon('sliders', 24) + '<span>' + (D.status.ha.state === 'connecting' ? 'Connecting to Home Assistant…' : 'Home Assistant not connected') + '</span>';
+      return head + '<p class="h-sq-note">' + (D.status.ha.state === 'connecting' ? 'Connecting to Home Assistant…' : 'Home Assistant isn’t connected.<br><b>Tap to connect</b>') + '</p>';
     }
     var lights = D.devices.filter(function (d) { return d.type === 'light' && d.on; }).length;
     var unlocked = D.devices.filter(function (d) { return d.type === 'lock' && !d.locked; });
     var garage = D.devices.filter(function (d) { return d.type === 'garage' && d.state !== 'closed'; })[0];
     var secure = !unlocked.length && !garage;
     var secText = secure ? 'All locked' : (garage ? garage.name + ' ' + garage.state : unlocked[0].name + ' unlocked');
-    return App.icon('bulb', 24) + '<b class="num">' + lights + '</b><span>on</span>' +
-      '<span class="h-st-sep' + (secure ? '' : ' is-warn') + '">' + App.icon(secure ? 'lock' : 'unlock', 22) + App.esc(secText) + '</span>' +
-      (D.climate && D.climate.current != null ? '<span class="h-st-sep">' + App.icon('thermo', 22) + D.climate.current + '°</span>' : '');
+    return head +
+      '<div class="h-sq-row">' + App.icon('bulb', 22) + '<b class="num">' + lights + '</b><span>' + (lights === 1 ? 'light' : 'lights') + ' on</span></div>' +
+      '<div class="h-sq-row' + (secure ? '' : ' is-warn') + '">' + App.icon(secure ? 'lock' : 'unlock', 22) + '<span>' + App.esc(secText) + '</span></div>' +
+      (D.climate && D.climate.current != null ? '<div class="h-sq-row">' + App.icon('thermo', 22) + '<b class="num">' + D.climate.current + '°</b><span>inside</span></div>' : '');
   }
 
   function paint() {
     var el = V.el;
     el.querySelector('.h-clock').innerHTML = clock();
-    el.querySelector('.h-outside').innerHTML = outside();
-    el.querySelector('.h-presence').innerHTML = presence();
-    el.querySelector('.h-hero-slot').innerHTML = hero();
-    el.querySelector('.h-lanes').innerHTML = lanes();
     el.querySelector('.h-shop').innerHTML = shopping();
     el.querySelector('.h-status').innerHTML = status();
+    el.querySelector('.h-hero-slot').innerHTML = hero();
+    el.querySelector('.h-outside').innerHTML = outside();
   }
 
   function photoCaption(s) {
@@ -177,10 +155,8 @@
       if (!el.firstChild) {
         el.innerHTML = '<div class="home">' +
           '<div class="h-clock" data-go="calendar"></div>' +
-          '<div class="h-presence"></div>' +
-          '<div class="h-main"><div class="h-hero-slot"></div><div class="h-outside card"></div><div class="h-lanes"></div>' +
-          '  <div class="h-duo"><button class="h-shop card" data-go="shopping"></button><button class="h-status card" data-go="control"></button></div>' +
-          '</div>' +
+          '<div class="h-squares"><button class="h-shop card" data-go="shopping"></button><button class="h-status card" data-go="control"></button></div>' +
+          '<div class="h-main"><div class="h-hero-slot"></div><div class="h-outside card"></div></div>' +
           '<button class="h-photo" data-go="photos"><div class="h-photo-stage"></div><div class="h-photo-cap"></div></button>' +
           '</div>';
         el.addEventListener('click', function (e) {
@@ -202,13 +178,12 @@
     if (!V.el || !V.el.firstChild) return;
     V.el.querySelector('.h-clock').innerHTML = clock();
     V.el.querySelector('.h-hero-slot').innerHTML = hero();
-    if (n.getMinutes() === 0) { V.el.querySelector('.h-outside').innerHTML = outside(); V.el.querySelector('.h-lanes').innerHTML = lanes(); }
+    if (n.getMinutes() === 0) V.el.querySelector('.h-outside').innerHTML = outside();
   });
   App.on('data', function () { if (App.current === 'home') paint(); });
-  // Home Assistant updates (devices, presence) repaint only the parts that use them.
+  // Home Assistant updates repaint only the Home square.
   App.on('ha', function () {
     if (!V.el || !V.el.firstChild) return;
     V.el.querySelector('.h-status').innerHTML = status();
-    V.el.querySelector('.h-presence').innerHTML = presence();
   });
 })();
