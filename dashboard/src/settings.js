@@ -19,9 +19,9 @@ export const LIMITS = {
 
 export const DEFAULTS = { clock24: false, nightFrom: 22, nightTo: 6, idleMinutes: 2, slideSeconds: 15 };
 
-// Fields the Settings screen edits; `rev`, `usedIds` and `updated` are kept by the server.
+// Fields the Settings screen edits; `rev`, `usedIds`, `updated` and `reloadAt` are kept by the server.
 export const SETTINGS_FIELDS = ['family', 'calendars', 'albums', 'location', 'units', 'clock24', 'nightFrom', 'nightTo', 'idleMinutes', 'slideSeconds', 'haUrl'];
-const SERVER_FIELDS = ['rev', 'usedIds', 'updated'];
+const SERVER_FIELDS = ['rev', 'usedIds', 'updated', 'reloadAt'];
 const RESERVED_IDS = ['family', 'any', 'all'];
 
 // ------------------------------------------------------------------ small helpers
@@ -364,6 +364,7 @@ export function runtimeConfig(doc, env, cf = {}, tz) {
     units: doc.units,
     display: { clock24: doc.clock24, nightFrom: doc.nightFrom, nightTo: doc.nightTo, idleMinutes: doc.idleMinutes, slideSeconds: doc.slideSeconds },
     removed: removedIds(doc),
+    reloadAt: doc.reloadAt || 0,
   };
 }
 

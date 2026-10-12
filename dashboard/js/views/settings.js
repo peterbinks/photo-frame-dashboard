@@ -151,8 +151,9 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
     return head('Sync', 'Screens refresh on their own: calendar every 5 min, weather 15, photos 30, chores and shopping every minute.') +
       '<div class="card st-list">' + rows + '</div>' +
       '<div class="st-actions">' + btn('data-refresh="all"' + (any ? ' disabled' : ''), App.icon('refresh', 22) + 'Refresh everything', 'btn--solid') +
-      btn('data-reload', 'Reload app') + '</div>' +
-      '<p class="st-note">Version <b>' + esc(v.current) + '</b>' + (newer ? ' · a new version is ready and loads when the screen is idle' : v.checked ? ' · up to date' : '') + '</p>';
+      btn('data-reload', 'Reload app') + btn('data-reload-all', 'Reload all screens') + '</div>' +
+      '<p class="st-note">Version <b>' + esc(v.current) + '</b>' + (newer ? ' · a new version is ready and loads when the screen is idle' : v.checked ? ' · up to date' : '') +
+      '. “Reload all screens” reloads the frame and every other open screen within about a minute.</p>';
   }
 
   function familySection() {
@@ -610,6 +611,16 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
       return paint();
     }
     if (t.hasAttribute('data-reload')) return App.version.reload();
+    if (t.hasAttribute('data-reload-all')) {
+      t.disabled = true;
+      return App.version.reloadAll().then(function () {
+        App.toast('Reloading every screen — the frame follows within a minute', { icon: 'check', ms: 2500 });
+        setTimeout(App.version.reload, 1500);
+      }, function (e) {
+        t.disabled = false;
+        App.toast('Couldn’t reach the server: ' + esc(e.message), { icon: 'bolt', ms: 4000 });
+      });
+    }
     if (!V.doc) return;
     if (ds.member) return memberSheet(ds.member);
     if (t.hasAttribute('data-add-member')) return memberSheet(null);

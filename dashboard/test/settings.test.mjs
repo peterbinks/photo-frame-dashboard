@@ -233,6 +233,24 @@ test('worker: 401 without the key; first request seeds settings; config hides li
   assert.equal((await h.call('/api/version')).body.version, 'b123');
 });
 
+test('worker: "reload all screens" reaches state polls without counting as a settings change', async () => {
+  const h = await harness();
+  const before = await h.call('/api/state');
+  assert.equal(before.body.reloadAt, 0);
+  assert.equal((await h.call('/api/reload', { noKey: true, method: 'POST' })).status, 401);
+  assert.equal((await h.call('/api/reload')).status, 405);
+  const r = await h.call('/api/reload', { method: 'POST' });
+  assert.equal(r.status, 200);
+  const after = await h.call('/api/state');
+  assert.equal(after.body.reloadAt, r.body.reloadAt);
+  assert.equal(after.body.settingsRev, before.body.settingsRev, 'rev unchanged: screens reload, not re-apply settings');
+  // The Settings screen may send back the whole doc it fetched, reloadAt included; saving keeps working.
+  const doc = (await h.call('/api/settings')).body;
+  const put = await h.call('/api/settings', { method: 'PUT', body: { ...doc, units: 'celsius' } });
+  assert.equal(put.status, 200);
+  assert.equal(put.body.reloadAt, r.body.reloadAt);
+});
+
 test('worker: PUT validates, bumps rev, 409s a stale rev, and removal updates state', async () => {
   const h = await harness();
   const st = await h.call('/api/state');

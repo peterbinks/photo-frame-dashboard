@@ -158,6 +158,17 @@ async function handleSettings(request, env, cf) {
   return json(next);
 }
 
+// POST /api/reload: every open screen reloads on its next state poll (≤ about a minute).
+// Stored on the settings doc without bumping rev, so it doesn't count as a settings change.
+async function handleReload(request, env, cf) {
+  if (request.method !== 'POST') return json({ error: 'method not allowed' }, 405, { Allow: 'POST' });
+  const doc = await loadSettings(env, cf, true);
+  const next = { ...doc, reloadAt: Date.now() };
+  await env.STATE.put(SETTINGS_KEY, JSON.stringify(next));
+  memoSet(SETTINGS_KEY, next);
+  return json({ reloadAt: next.reloadAt });
+}
+
 // POST /api/settings/check {kind, value}: try a link before it is saved.
 async function handleCheck(request) {
   if (request.method !== 'POST') return json({ error: 'method not allowed' }, 405, { Allow: 'POST' });
@@ -396,9 +407,11 @@ async function loadState(env, cfg) {
   return doc;
 }
 
-// Responses carry settingsRev so the screens' 1-minute state poll notices settings changes too.
+// Responses carry settingsRev (settings changed) and reloadAt ("Reload all screens") so the
+// screens' 1-minute state poll notices both.
 async function handleState(request, env, cfg) {
-  if (request.method === 'GET') return json({ ...(await loadState(env, cfg)), settingsRev: cfg.rev });
+  const meta = { settingsRev: cfg.rev, reloadAt: cfg.reloadAt };
+  if (request.method === 'GET') return json({ ...(await loadState(env, cfg)), ...meta });
   if (request.method !== 'PUT') return json({ error: 'method not allowed' }, 405, { Allow: 'GET, PUT' });
   const text = await request.text();
   if (text.length > 1024 * 1024) return json({ error: 'state too large' }, 413);
@@ -406,11 +419,11 @@ async function handleState(request, env, cfg) {
   if (typeof fields === 'string') return json({ error: fields }, 400);
   const body = JSON.parse(text);
   const current = await loadState(env, cfg);
-  if (body.rev !== current.rev) return json({ error: 'conflict', state: { ...current, settingsRev: cfg.rev } }, 409);
+  if (body.rev !== current.rev) return json({ error: 'conflict', state: { ...current, ...meta } }, 409);
   const next = normalize({ ...current, ...fields, rev: current.rev + 1, updated: Date.now() }, cfg.members);
   purgeMembers(next, cfg.removed, cfg.members.map((m) => m.id));
   await env.STATE.put(STATE_KEY, JSON.stringify(next));
-  return json({ ...next, settingsRev: cfg.rev });
+  return json({ ...next, ...meta });
 }
 
 // ------------------------------------------------------------------ config + version
@@ -461,6 +474,7 @@ export default {
       if (path === '/api/version') return json({ version: await buildId(env, request) });
       if (path === '/api/settings') return await handleSettings(request, env, cf);
       if (path === '/api/settings/check') return await handleCheck(request);
+      if (path === '/api/reload') return await handleReload(request, env, cf);
       const cfg = runtimeConfig(await loadSettings(env, cf), env, cf, tzOf(env));
       if (path === '/api/state') return await handleState(request, env, cfg);
       if (request.method !== 'GET') return json({ error: 'method not allowed' }, 405);

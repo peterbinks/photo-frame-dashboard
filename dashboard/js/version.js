@@ -36,6 +36,20 @@ import { reloadDecision } from './reload-policy.js';
     try { if (App.mode === 'ambient' || App.mode === 'night') sessionStorage.setItem(RESUME, App.mode); } catch (e) { /* storage off */ }
     location.reload();
   };
+  // Asked for from another screen: reload now, unless someone is typing or mid Home Assistant login.
+  V.remoteReload = function () {
+    var a = document.activeElement;
+    var busy = (App.ha && App.ha.loggingIn()) || (!!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA'));
+    if (busy) { setTimeout(V.remoteReload, 15000); return; }
+    V.reload();
+  };
+  // Ask every screen (including this one) to reload.
+  V.reloadAll = function () {
+    return App.sync.api('/api/reload', { method: 'POST' }).then(function (r) {
+      if (!r.ok) throw new Error((r.body && r.body.error) || 'HTTP ' + r.status);
+      return r.body.reloadAt;
+    });
+  };
 
   App.on('ready', function () {
     var mode = null;

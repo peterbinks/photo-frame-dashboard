@@ -96,6 +96,13 @@
   function checkSettingsRev(r) {
     if (D.config && typeof r === 'number' && r !== D.config.settingsRev) reloadConfig();
   }
+  // "Reload all screens": the first value seen is this page's baseline; a newer one reloads it.
+  var reloadBase = null;
+  function checkReload(at) {
+    if (typeof at !== 'number') return;
+    if (reloadBase === null) { reloadBase = at; return; }
+    if (at > reloadBase && App.version) { reloadBase = at; App.version.remoteReload(); }
+  }
 
   // ------------------------------------------------------------ calendar
   function rebuildEvents() {
@@ -310,6 +317,7 @@
         if (mine === str && JSON.stringify(fieldsOf(r.body)) !== str) { applyDoc(fieldsOf(r.body)); remoteChanged(); }
         ok('state');
         checkSettingsRev(r.body.settingsRev);
+        checkReload(r.body.reloadAt);
       } else if (r.status === 409 && r.body.state) {
         var server = r.body.state, merged = merge(baseObj, serialize(), fieldsOf(server));
         setBase(server);
@@ -317,6 +325,7 @@
         remoteChanged();
         again = true;
         checkSettingsRev(server.settingsRev);
+        checkReload(server.reloadAt);
       } else {
         throw new Error(r.body.error || 'HTTP ' + r.status);
       }
@@ -337,6 +346,7 @@
       setBase(r.body);
       applyDoc(fieldsOf(r.body));
       ok('state');
+      checkReload(r.body.reloadAt);
     });
   }
   // Pull edits made on other devices. Local edits in flight go through save() (which merges).
@@ -350,6 +360,7 @@
       if (!r.ok) throw new Error(r.body.error || 'HTTP ' + r.status);
       ok('state');
       checkSettingsRev(r.body.settingsRev);
+      checkReload(r.body.reloadAt);
       if (r.body.rev === rev || saving || JSON.stringify(serialize()) !== baseStr) return;
       setBase(r.body);
       applyDoc(fieldsOf(r.body));
