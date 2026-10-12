@@ -2,11 +2,17 @@
 .ambient { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 65; background: #000; display: none; color: #fff; cursor: pointer; }
 .stage[data-mode="ambient"] .ambient { display: block; }
 .amb-stage { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
-.amb-scrim { position: absolute; left: 0; right: 0; bottom: 0; height: 60%; background: linear-gradient(0deg, rgba(0, 0, 0, .75), rgba(0, 0, 0, 0)); pointer-events: none; }
-.amb-info { position: absolute; left: 60px; right: 60px; bottom: 48px; display: flex; justify-content: space-between; align-items: flex-end; }
-.amb-time { font-size: 230px; line-height: .78; letter-spacing: -.04em; }
-.amb-date { font-size: 34px; font-weight: 500; letter-spacing: -.015em; margin-top: 16px; }
-.amb-right { display: flex; flex-direction: column; align-items: flex-end; gap: 14px; }
+/* Darken the top-left (clock) and bottom (weather) so text reads over any photo */
+.amb-scrim {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none;
+  background: radial-gradient(900px 520px at 0 0, rgba(0, 0, 0, .55), rgba(0, 0, 0, 0) 70%),
+    linear-gradient(0deg, rgba(0, 0, 0, .6), rgba(0, 0, 0, 0) 38%);
+}
+.amb-info { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; }
+.amb-clock { position: absolute; left: 60px; top: 52px; text-shadow: 0 2px 24px rgba(0, 0, 0, .35); }
+.amb-time { font-size: 200px; font-weight: 200; line-height: .8; letter-spacing: -.02em; }
+.amb-date { font-size: 32px; font-weight: 400; letter-spacing: -.01em; margin-top: 18px; opacity: .92; }
+.amb-right { position: absolute; right: 60px; bottom: 48px; display: flex; flex-direction: column; align-items: flex-end; gap: 14px; }
 .amb-wx { display: flex; align-items: center; gap: 12px; }
 .amb-wx .num { font-size: 72px; line-height: .8; }
 .amb-wx small { font-size: 22px; font-weight: 500; letter-spacing: -.01em; max-width: 220px; line-height: 1.15; }
@@ -16,8 +22,6 @@
   font-size: 20px; font-weight: 700;
 }
 .amb-next i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px #fff; }
-.amb-who { display: flex; gap: 8px; }
-.amb-who .avatar--away { background: rgba(0, 0, 0, .3); }
 
 /* Night (dim red clock) — kept above a minimum readable brightness */
 .night { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 66; background: #000; display: none; place-items: center; cursor: pointer; }

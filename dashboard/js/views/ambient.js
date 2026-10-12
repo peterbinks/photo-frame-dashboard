@@ -4,6 +4,7 @@
   var D = window.DATA, $ = App.$;
   var amb = { show: null }, shiftTimer = null;
 
+  // Clock top-left; weather + next event bottom-right.
   function ambientInfo() {
     var n = App.now(), w = App.weatherNow(), next = App.nextEvent();
     return '<div class="amb-clock"><div class="amb-time num">' + App.fmt.time(n, false) + '</div>' +
@@ -11,7 +12,6 @@
       '<div class="amb-right">' +
       '<div class="amb-wx">' + App.icon(w.cond, 44) + '<span class="num">' + w.temp + '°</span><small>' + w.summary + '</small></div>' +
       (next ? '<div class="amb-next" style="' + App.pstyle(App.evColor(next)) + '"><i></i>' + App.esc(next.title) + ' · ' + App.fmt.time(next.start) + '</div>' : '') +
-      '<div class="amb-who">' + D.people.map(function (p) { return App.avatar(p, 34, p.home === false ? 'avatar--away' : ''); }).join('') + '</div>' +
       '</div>';
   }
   function nightInfo() {
