@@ -102,6 +102,8 @@
       if (first.o === 'p') layout = D.photos.some(function (x) { return x !== first && x.tag === first.tag; }) ? 'pair' : 'polaroid';
       else layout = n % 5 === 3 ? 'collage' : n % 5 === 4 ? 'polaroid' : 'cover';
     }
+    // Cover with pairPortraits: a portrait shares the screen with a second portrait (same batch if possible).
+    if (layout === 'cover' && first.o === 'p' && this.o.pairPortraits) layout = 'pair';
     var ps = [first];
     if (layout === 'pair') {
       if (first.o !== 'p') { var portrait = sibling(function (x) { return x.o === 'p'; }); if (portrait) { first = portrait; ps = [first]; } }
