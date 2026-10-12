@@ -18,6 +18,7 @@
       '<span class="h-wx-icon">' + App.icon(w.cond, 60) + '</span>' +
       '<span class="h-wx-temp num">' + w.temp + '°</span>' +
       '<span class="h-wx-meta"><b>' + w.label + '</b><span>H ' + w.hi + '°  L ' + w.lo + '°</span></span>' +
+      airPill() +
       '</div>' +
       '<div class="h-wx-say"><b>' + w.summary + '.</b> ' + w.advice + '.</div>' +
       '<div class="h-wx-hours">' + hours.map(function (h) {
@@ -25,6 +26,47 @@
         return '<div class="h-hr' + (h.p >= 50 ? ' is-wet' : '') + '"><span class="h-hr-l">' + h.label + '</span>' +
           '<span class="h-hr-i" style="transform:translateY(' + -lift + 'px)">' + App.icon(h.c, 22) + '</span><b>' + h.t + '°</b></div>';
       }).join('') + '</div>';
+  }
+
+  // ---- air quality + pollen: a compact pill in the weather block, details in a sheet
+  var AQI_COLORS = ['#2E9E5B', '#E3B505', '#F28C28', '#D93B30', '#8F3F97', '#7E0023'];
+  var POLLEN_COLORS = ['#2E9E5B', '#9BBF2A', '#E3B505', '#F28C28', '#D93B30'];
+  function dot(color) { return '<i class="h-air-dot" style="background:' + color + '"></i>'; }
+  function airPill() {
+    var A = D.air, a = A && A.air && A.air.now, p = A && A.pollen && A.pollen.today;
+    if (!a && !p) return '';
+    return '<button class="h-air" data-air>' +
+      (a ? '<span>' + dot(AQI_COLORS[a.level]) + '<b>AQI</b> <span class="num">' + a.aqi + '</span></span>' : '') +
+      (p ? '<span>' + dot(POLLEN_COLORS[p.level]) + '<b>Pollen</b> <span class="num">' + p.index.toFixed(1) + '</span></span>' : '') +
+      '</button>';
+  }
+  function airSheet() {
+    var A = D.air || {}, air = A.air, pol = A.pollen, esc = App.esc;
+    var aCard = air
+      ? '<div class="air-big"><span class="num" style="color:' + AQI_COLORS[air.now.level] + '">' + air.now.aqi + '</span><span><b>' + esc(air.now.label) + '</b>' +
+        (air.now.main ? '<small>Mostly ' + esc(air.now.main.charAt(0).toLowerCase() + air.now.main.slice(1)) + '</small>' : '') + '</span></div>' +
+        '<div class="air-rows">' + [['Today’s peak', air.today], ['Tomorrow’s peak', air.tomorrow]].filter(function (r) { return r[1]; }).map(function (r) {
+          return '<div>' + dot(AQI_COLORS[r[1].level]) + '<span>' + r[0] + '</span><b class="num">' + r[1].aqi + '</b><small>' + esc(r[1].label) + '</small></div>';
+        }).join('') + '</div>'
+      : '<p class="air-err">' + esc(A.airError || 'Air quality unavailable') + '</p>';
+    var pCard = pol
+      ? '<div class="air-big"><span class="num" style="color:' + POLLEN_COLORS[pol.today.level] + '">' + pol.today.index.toFixed(1) + '</span><span><b>' + esc(pol.today.label) + '</b>' +
+        (pol.today.triggers.length ? '<small>' + esc(pol.today.triggers.map(function (t) { return t.name; }).join(', ')) + '</small>' : '') + '</span></div>' +
+        '<div class="air-days">' + pol.days.map(function (d, i) {
+          var dt = new Date(d.date + 'T12:00:00');
+          return '<div><span class="air-bar"><i style="height:' + Math.max(6, Math.round(d.index / 12 * 100)) + '%;background:' + POLLEN_COLORS[d.level] + '"></i></span>' +
+            '<b class="num">' + d.index.toFixed(1) + '</b><small>' + (i === 0 ? 'Today' : App.fmt.dayShort(dt)) + '</small></div>';
+        }).join('') + '</div>' +
+        '<div class="air-rows">' + [['Asthma', pol.asthma && pol.asthma.today], ['Cold & flu', pol.cold && pol.cold.today]].filter(function (r) { return r[1]; }).map(function (r) {
+          return '<div>' + dot(POLLEN_COLORS[r[1].level]) + '<span>' + r[0] + '</span><b class="num">' + r[1].index.toFixed(1) + '</b><small>' + esc(r[1].label) + '</small></div>';
+        }).join('') + '</div>'
+      : '<p class="air-err">' + esc(A.pollenError || 'Pollen forecast unavailable') + '</p>';
+    App.sheet('<div class="sheet-pad air-sheet"><div class="label">Outside today</div>' +
+      '<h2 class="display sheet-h">' + (air ? esc(air.now.label) + ' air' : 'Air') + (pol ? '<i>, ' + esc(pol.today.label.toLowerCase()) + ' pollen</i>' : '') + '</h2>' +
+      '<div class="air-cols"><section class="card"><div class="label">Air quality · US AQI 0–500</div>' + aCard + '</section>' +
+      '<section class="card"><div class="label">Pollen · 0–12</div>' + pCard + '</section></div>' +
+      '<p class="air-src">Air quality: Open-Meteo forecast model. Pollen, asthma and cold & flu: pollen.com' + (pol ? ' for ' + esc(pol.zip) : '') + '.</p>' +
+      '<div class="sheet-actions"><button class="btn btn--solid" data-close>Done</button></div></div>', { cls: 'sheet--wide' });
   }
 
   // Presence comes from Home Assistant person.* entities; unknown (null) shows just the name.
@@ -162,6 +204,7 @@
         el.addEventListener('click', function (e) {
           var ev = e.target.closest('[data-ev]');
           if (ev) { App.eventSheet(App.findEvent(ev.dataset.ev)); return; }
+          if (e.target.closest('[data-air]')) { airSheet(); return; }
           var g = e.target.closest('[data-go]');
           if (g) App.go(g.dataset.go);
         });

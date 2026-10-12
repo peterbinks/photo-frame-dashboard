@@ -291,6 +291,27 @@ test('worker: PUT validates, bumps rev, 409s a stale rev, and removal updates st
   assert.equal(add.body.family[2].id, 'sam-2');
 });
 
+test('worker: /api/air returns air quality and pollen independently; pollen needs a ZIP', async () => {
+  const pollen = { ForecastDate: '2026-10-11T00:00:00-04:00', Location: { DisplayLocation: 'Chicago, IL', periods: [{ Type: 'Today', Index: 3.5, Triggers: [{ Name: 'Ragweed', PlantType: 'Ragweed' }] }] } };
+  const h = await harness({}, (u) => {
+    if (u.startsWith('https://air-quality-api.open-meteo.com/')) return Response.json({ current: { us_aqi: 42, us_aqi_ozone: 42 }, hourly: { time: [], us_aqi: [] } });
+    if (u.startsWith('https://www.pollen.com/api/forecast/current/pollen/60601')) return Response.json(pollen);
+    return null;
+  });
+  let r = await h.call('/api/air');
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.body.air.now, { aqi: 42, level: 0, label: 'Good', main: 'Ozone' });
+  assert.equal(r.body.pollen, null);
+  assert.match(r.body.pollenError, /ZIP/);
+  const doc = (await h.call('/api/settings')).body;
+  assert.equal((await h.call('/api/settings', { method: 'PUT', body: { rev: doc.rev, location: { city: 'Chicago, IL 60601', lat: 41.88, lon: -87.62 } } })).status, 200);
+  r = await h.call('/api/air?fresh=1');
+  assert.equal(r.body.pollen.zip, '60601');
+  assert.equal(r.body.pollen.today.triggers[0].name, 'Ragweed');
+  assert.equal(r.body.pollenError, null);
+  assert.ok(h.calls.some((u) => u.includes('latitude=41.88') && u.startsWith('https://air-quality-api.open-meteo.com/')), 'air quality follows the new location');
+});
+
 test('worker: ?fresh=1 bypasses caches at most once per 20 s per source', async () => {
   const h = await harness();
   const wx = () => h.calls.filter((u) => u.startsWith('https://api.open-meteo.com/')).length;

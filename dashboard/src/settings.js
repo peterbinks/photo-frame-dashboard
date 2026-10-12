@@ -5,6 +5,7 @@
 import { parseAlbumLink } from './icloud.js';
 import { hashId } from './ics-filter.js';
 import { unitsFor } from './weather.js';
+import { zipFrom } from './pollen.js';
 
 export const SETTINGS_KEY = 'settings:v1';
 
@@ -361,6 +362,8 @@ export function runtimeConfig(doc, env, cf = {}, tz) {
     lat: isFinite(lat) ? lat : null, lon: isFinite(lon) ? lon : null,
     city: loc ? loc.city : cf.city || '',
     autoLocation: !loc,
+    // US ZIP for pollen: from the chosen place's label ("Chicago, IL 60618"), else where the screen is.
+    zip: (loc && zipFrom(loc.city)) || (cf.country === 'US' && /^\d{5}$/.test(String(cf.postalCode || '')) ? cf.postalCode : null),
     units: doc.units,
     display: { clock24: doc.clock24, nightFrom: doc.nightFrom, nightTo: doc.nightTo, idleMinutes: doc.idleMinutes, slideSeconds: doc.slideSeconds },
     removed: removedIds(doc),

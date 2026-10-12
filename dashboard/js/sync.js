@@ -43,7 +43,7 @@
   function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
 
   // ------------------------------------------------------------ per-source sync status (Settings → Sync)
-  var SOURCES = ['calendar', 'photos', 'weather', 'state'];
+  var SOURCES = ['calendar', 'photos', 'weather', 'air', 'state'];
   var status = {};
   SOURCES.forEach(function (s) { status[s] = { lastOk: 0, lastError: null, loading: false }; });
   function begin(src) { status[src].loading = true; App.emit('sync', src); }
@@ -200,6 +200,24 @@
       if (e instanceof Unauthorized) return;
       D.status.weather = { state: 'error', message: errMsg(e) };
       failed('weather', errMsg(e));
+      App.emit('data');
+    });
+  }
+
+  // ------------------------------------------------------------ air quality + pollen
+  function loadAir(fresh) {
+    begin('air');
+    return api('/api/air' + (fresh ? '?fresh=1' : '')).then(function (r) {
+      if (!r.ok) throw new Error(r.body.error || 'HTTP ' + r.status);
+      D.air = r.body;
+      var err = r.body.airError && r.body.pollenError ? r.body.airError : null;
+      D.status.air = err ? { state: 'error', message: err } : { state: 'ok' };
+      if (err) failed('air', err); else ok('air');
+      App.emit('data');
+    }).catch(function (e) {
+      if (e instanceof Unauthorized) return;
+      D.status.air = { state: 'error', message: errMsg(e) };
+      failed('air', errMsg(e));
       App.emit('data');
     });
   }
@@ -372,7 +390,7 @@
   function refreshState() { pullState(false); }
 
   // ------------------------------------------------------------ public
-  var LOADERS = { calendar: loadCalendar, photos: loadPhotos, weather: loadWeather, state: function () { return pullState(true); } };
+  var LOADERS = { calendar: loadCalendar, photos: loadPhotos, weather: loadWeather, air: loadAir, state: function () { return pullState(true); } };
   App.sync = {
     api: api,
     Unauthorized: Unauthorized,
@@ -409,9 +427,10 @@
   App.on('ready', function () {
     App.on('data', scheduleSave);
     document.addEventListener('pointerdown', function () { lastTouch = Date.now(); }, true);
-    loadCalendar(); loadWeather(); loadPhotos();
+    loadCalendar(); loadWeather(); loadAir(); loadPhotos();
     setInterval(loadCalendar, 5 * MIN);
     setInterval(loadWeather, 15 * MIN);
+    setInterval(loadAir, 30 * MIN);
     setInterval(loadPhotos, 30 * MIN);
     setInterval(refreshState, MIN);
     window.addEventListener('focus', refreshState);
@@ -422,5 +441,5 @@
     }
   });
   // New day: the Worker un-ticks chores and records the week strip; pull that and fresh events.
-  App.on('time', function () { refreshState(); loadCalendar(); loadWeather(); });
+  App.on('time', function () { refreshState(); loadCalendar(); loadWeather(); loadAir(); });
 })();

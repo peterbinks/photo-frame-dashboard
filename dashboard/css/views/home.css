@@ -24,6 +24,39 @@
 .h-wx-meta span { color: var(--mute); font-variant-numeric: tabular-nums; white-space: pre; }
 .h-wx-say { font-size: 20px; font-weight: 450; line-height: 1.15; letter-spacing: -.01em; margin: 8px 0 8px; color: var(--ink-2); }
 .h-wx-say b { font-weight: 650; color: var(--ink); }
+/* air quality + pollen pill (glass, like the rail) */
+.h-air {
+  margin-left: auto; flex: none;
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 8px 12px; border-radius: 16px;
+  background: rgba(255, 255, 255, .55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 0 0 1px rgba(90, 60, 30, .06), 0 4px 12px rgba(90, 60, 30, .08);
+  font-size: 15px; line-height: 1.15; white-space: nowrap;
+}
+.h-air > span { display: flex; align-items: center; gap: 6px; }
+.h-air b { font-weight: 600; color: var(--ink-2); }
+.h-air .num { margin-left: auto; padding-left: 6px; font-size: 16px; }
+.h-air:active { transform: scale(.96); }
+.h-air-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08); }
+
+.air-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.air-cols .card { display: flex; flex-direction: column; gap: 14px; }
+.air-big { display: flex; align-items: center; gap: 16px; }
+.air-big .num { font-size: 72px; line-height: .85; letter-spacing: -.04em; }
+.air-big b { display: block; font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
+.air-big small { display: block; font-size: 16px; color: var(--ink-2); margin-top: 2px; }
+.air-rows > div { display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 17px; white-space: nowrap; border-top: 1px solid rgb(var(--ink-rgb) / .08); }
+.air-rows span { flex: 1; color: var(--ink-2); }
+.air-rows b { font-size: 18px; }
+.air-rows small { width: 120px; font-size: 15px; color: var(--mute); overflow: hidden; text-overflow: ellipsis; }
+.air-days { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; text-align: center; }
+.air-days > div { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.air-bar { width: 22px; height: 64px; border-radius: 8px; background: rgb(var(--ink-rgb) / .06); display: flex; align-items: flex-end; overflow: hidden; }
+.air-bar i { display: block; width: 100%; border-radius: 8px; }
+.air-days b { font-size: 16px; }
+.air-days small { font-size: 13px; font-weight: 600; color: var(--mute); text-transform: uppercase; letter-spacing: .04em; }
+.air-err { font-size: 17px; color: var(--ink-2); line-height: 1.4; }
+.air-src { margin-top: 14px; font-size: 14px; color: var(--mute); }
 .h-wx-hours { display: grid; grid-template-columns: repeat(7, 1fr); }
 .h-hr { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 16px; }
 .h-hr-l { font-size: var(--fs-min); font-weight: 700; color: var(--mute); text-transform: uppercase; }

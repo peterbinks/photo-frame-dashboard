@@ -3,15 +3,19 @@ import { prefilterIcs, windowFromQuery, hashId } from './ics-filter.js';
 import { fetchAlbum, fetchAssetUrls, fetchCloudAlbum, cloudPhotoUrl } from './icloud.js';
 import { fetchWeather, mapWeather } from './weather.js';
 import { nwsWeather } from './nws.js';
+import { fetchPollen } from './pollen.js';
+import { fetchAir } from './airquality.js';
 import { STATE_KEY, seedState, normalize, purgeMembers, rollover, sanitize } from './state.js';
 import { SETTINGS_KEY, seedSettings, applySettings, runtimeConfig, removedIds, cleanCalendarUrl, cleanAlbumUrl, icsSummary, mapPlaces, mapZip } from './settings.js';
 import { createThrottle } from './fresh.js';
-import { isValidTz, dayKey } from './time.js';
+import { isValidTz, dayKey, addDaysKey } from './time.js';
 
 const COOKIE = 'hq_key';
 const COOKIE_MAX_AGE = 400 * 24 * 3600; // browsers cap cookie lifetime at 400 days
 const ICS_TTL = 5 * 60;
 const WEATHER_TTL = 10 * 60;
+const AIR_TTL = 30 * 60;
+const POLLEN_TTL = 3 * 3600; // pollen.com updates its forecast once a day
 const ALBUM_TTL = 15 * 60;
 const PHOTO_TTL = 30 * 24 * 3600;
 const SETTINGS_MEMO_MS = 10 * 1000;
@@ -286,6 +290,27 @@ async function handleWeather(url, env, cfg, ctx) {
   }
 }
 
+// ------------------------------------------------------------------ air quality + pollen
+// One endpoint for the Today "Air" pill. Each half fails on its own: { air, airError, pollen, pollenError }.
+async function handleAir(url, cfg, ctx) {
+  const fresh = freshness(url, 'air');
+  const today = dayKey(Date.now(), cfg.tz), tomorrow = addDaysKey(today, 1);
+  const settle = (p) => p.then((v) => ({ v }), (e) => ({ e: String((e && e.message) || e) }));
+  const [air, pollen] = await Promise.all([
+    settle(cfg.lat == null || cfg.lon == null
+      ? Promise.reject(new Error('No location — pick a city in Settings → Display'))
+      : (() => {
+        const lat = Math.round(cfg.lat * 100) / 100, lon = Math.round(cfg.lon * 100) / 100;
+        return cached('aq:' + lat + ',' + lon + ':' + cfg.tz + ':' + today, AIR_TTL, ctx, fresh.force, 'json',
+          () => fetchAir({ lat, lon, tz: cfg.tz, todayKey: today, tomorrowKey: tomorrow }));
+      })()),
+    settle(!cfg.zip
+      ? Promise.reject(new Error('Pollen needs a US ZIP code: search for it in Settings → Display → Weather location'))
+      : cached('pollen:' + cfg.zip + ':' + today, POLLEN_TTL, ctx, fresh.force, 'json', () => fetchPollen(cfg.zip))),
+  ]);
+  return json({ air: air.v || null, airError: air.e || null, pollen: pollen.v || null, pollenError: pollen.e || null }, 200, fresh.headers);
+}
+
 // ------------------------------------------------------------------ photos
 // Album listings live in memory + KV (stale-while-revalidate): the old webstream call can take tens
 // of seconds for big albums, and the photo proxy needs the id → checksum/record map.
@@ -481,6 +506,7 @@ export default {
       if (path === '/api/config') return handleConfig(cfg);
       if (path === '/api/calendar') return await handleCalendar(request, url, cfg, ctx);
       if (path === '/api/weather') return await handleWeather(url, env, cfg, ctx);
+      if (path === '/api/air') return await handleAir(url, cfg, ctx);
       if (path === '/api/photos') return await handlePhotos(url, env, ctx, cfg);
       const m = path.match(/^\/api\/photo\/([A-Za-z0-9-]{1,40})\/([^/]+)$/);
       if (m) return await handlePhoto(env, ctx, cfg, m[1], decodeURIComponent(m[2]));

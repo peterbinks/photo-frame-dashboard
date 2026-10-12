@@ -12,7 +12,7 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
     ['sync', 'refresh', 'Sync'], ['family', 'person', 'Family'], ['calendars', 'calendar', 'Calendars'],
     ['photos', 'photo', 'Photo albums'], ['display', 'sun', 'Display'], ['ha', 'sliders', 'Home Assistant'], ['about', 'bell', 'About']
   ];
-  var SOURCES = [['calendar', 'Calendar'], ['photos', 'Photos'], ['weather', 'Weather'], ['state', 'Chores & shopping']];
+  var SOURCES = [['calendar', 'Calendar'], ['photos', 'Photos'], ['weather', 'Weather'], ['air', 'Air quality & pollen'], ['state', 'Chores & shopping']];
   var esc = App.esc;
   var LINK_ATTRS = ' type="url" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go"';
 
@@ -143,12 +143,17 @@ import { PALETTE, LIMITS, cleanCalendarUrl, cleanAlbumUrl, cleanHaUrl } from '..
         ? '<span class="st-bad">' + esc(x.lastError) + '</span>' + (x.lastOk ? ' · last good ' + ago(x.lastOk) : '')
         : x.lastOk ? 'Updated ' + ago(x.lastOk) : x.loading ? 'Loading…' : 'Not loaded yet';
       if (s[0] === 'weather' && D.weather && D.weather.source) sub += ' · ' + weatherSource(D.weather);
+      if (s[0] === 'air' && D.air && !x.lastError) {
+        sub += ' · Open-Meteo' + (D.air.pollen ? ' + pollen.com · ' + esc(D.air.pollen.zip) : '');
+        var half = D.air.airError || D.air.pollenError;
+        if (half) sub += '<br><span class="st-bad">' + esc(half) + '</span>';
+      }
       return '<div class="st-row"><i class="st-dot st-dot--' + tone + '"></i><div class="st-main"><b>' + s[1] + '</b><small>' + sub + '</small></div>' +
         '<button class="icon-btn st-refresh' + (x.loading ? ' is-busy' : '') + '" data-refresh="' + s[0] + '" aria-label="Refresh ' + s[1] + '">' + App.icon('refresh', 26) + '</button></div>';
     }).join('');
     var any = SOURCES.some(function (s) { return st[s[0]].loading; });
     var newer = v.latest && v.latest !== v.current;
-    return head('Sync', 'Screens refresh on their own: calendar every 5 min, weather 15, photos 30, chores and shopping every minute.') +
+    return head('Sync', 'Screens refresh on their own: calendar every 5 min, weather 15, air quality & pollen 30, photos 30, chores and shopping every minute.') +
       '<div class="card st-list">' + rows + '</div>' +
       '<div class="st-actions">' + btn('data-refresh="all"' + (any ? ' disabled' : ''), App.icon('refresh', 22) + 'Refresh everything', 'btn--solid') +
       btn('data-reload', 'Reload app') + btn('data-reload-all', 'Reload all screens') + '</div>' +
